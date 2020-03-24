@@ -1,16 +1,24 @@
+$font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif;
+$accent-color: #0080f0;
+$border-color: #c0c0c0;
+$header-bg-color: #e8e8e8;
+$header-fg-color: #303030;
+$body-bg-color: #ffffff;
+$body-fg-color: #303030;
+$even-rows-bg-color: #f8f8f8;
+
 .editable-table {
-  border-top: 1px solid #c0c0c0;
-  border-left: 1px solid #c0c0c0;
+  border: 1px solid $border-color;
   box-sizing: border-box;
   display: inline-block;
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
-  overflow: scroll;
+  overflow: auto;
   position: relative;
   max-width: 100%;
   max-height: 100%;
   &[data-focus="true"] {
-    outline: 2px solid #0080f0;
+    outline: 2px solid $accent-color;
   }
 
   table {
@@ -18,51 +26,83 @@
   }
 
   tbody {
-    overflow: scroll;
+    overflow: auto;
   }
 
   th,
   td {
-    border-right: 1px solid #c0c0c0;
-    border-bottom: 1px solid #c0c0c0;
+    border-right: 1px solid $border-color;
+    border-bottom: 1px solid $border-color;
     cursor: default;
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif;
+    font-family: $font-family;
     font-size: 1rem;
     line-height: 1;
     padding: 0.5rem;
     position: relative;
     user-select: none;
+    white-space: nowrap;
   }
 
   th {
-    background-color: #e8e8e8;
+    background-color: $header-bg-color;
+    color: $header-fg-color;
+    font-weight: 700;
     position: sticky;
+  }
+  thead th {
     top: 0;
+    z-index: 2;
+  }
+  thead th:first-child {
+    left: 0;
+    z-index: 3;
+  }
+  tbody th {
+    left: 0;
     z-index: 1;
   }
 
+  tr td {
+    color: $body-fg-color;
+  }
+  tr td[data-type="number"] {
+    text-align: right;
+  }
   tr:nth-child(even) td {
-    background-color: #f8f8f8;
+    background-color: $even-rows-bg-color;
   }
   tr td[data-cursor="true"] {
-    background-color: #0080f0;
-    color: #ffffff;
+    background-color: $accent-color;
+    color: $body-bg-color;
   }
   &[data-editing="true"] td[data-cursor="true"] {
-    background-color: #ffffff;
+    background-color: $body-bg-color;
     padding: 0;
   }
 
-  td input {
-    -webkit-appearance: none;
+  td input[type="text"] {
+    appearance: none;
+    background-color: $body-bg-color;
     border-style: none;
     box-sizing: border-box;
+    color: $body-fg-color;
     display: block;
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif;
+    font-family: $font-family;
     font-size: 1rem;
     line-height: 0;
     outline-style: none;
     padding: 0 0.5rem;
     width: 100%;
+  }
+
+  td[data-type="boolean"] {
+    cursor: pointer;
+
+    &::before {
+      content: "✔";
+    }
+    &[data-checked="false"]::before {
+      opacity: 0.125;
+    }
   }
 }
