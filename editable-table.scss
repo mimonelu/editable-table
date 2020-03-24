@@ -1,0 +1,68 @@
+.editable-table {
+  border-top: 1px solid #c0c0c0;
+  border-left: 1px solid #c0c0c0;
+  box-sizing: border-box;
+  display: inline-block;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  overflow: scroll;
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  &[data-focus="true"] {
+    outline: 2px solid #0080f0;
+  }
+
+  table {
+    border-spacing: 0;
+  }
+
+  tbody {
+    overflow: scroll;
+  }
+
+  th,
+  td {
+    border-right: 1px solid #c0c0c0;
+    border-bottom: 1px solid #c0c0c0;
+    cursor: default;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0.5rem;
+    position: relative;
+    user-select: none;
+  }
+
+  th {
+    background-color: #e8e8e8;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  tr:nth-child(even) td {
+    background-color: #f8f8f8;
+  }
+  tr td[data-cursor="true"] {
+    background-color: #0080f0;
+    color: #ffffff;
+  }
+  &[data-editing="true"] td[data-cursor="true"] {
+    background-color: #ffffff;
+    padding: 0;
+  }
+
+  td input {
+    -webkit-appearance: none;
+    border-style: none;
+    box-sizing: border-box;
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif;
+    font-size: 1rem;
+    line-height: 0;
+    outline-style: none;
+    padding: 0 0.5rem;
+    width: 100%;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "editable-table",
+  "version": "1.0.0",
+  "description": "",
+  "main": "editable-table.js",
+  "scripts": {
+    "dev": "parcel watch --no-cache --no-source-maps --target browser --no-hmr --global EditableTable ./editable-table.js -d ./dist",
+    "build": "parcel build --no-cache --no-source-maps --target browser --global EditableTable ./editable-table.js -d ./dist"
+  },
+  "browserslist": [
+    "> 0.25%",
+    "last 10 versions"
+  ],
+  "author": "mimonelu",
+  "license": "ISC",
+  "devDependencies": {
+    "autoprefixer": "^9.7.5",
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "node-sass": "^4.13.1",
+    "parcel-bundler": "^1.12.4",
+    "postcss": "^7.0.27",
+    "postcss-cli": "^7.1.0"
+  }
+}
