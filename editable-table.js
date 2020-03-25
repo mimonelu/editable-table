@@ -303,14 +303,36 @@ class EditableTable {
       this.setInputting(true)
       this.setFocus(FocusType.None)
       node.innerHTML = ''
-      const inputNode = document.createElement('input')
-      inputNode.setAttribute('type', 'text')
-      inputNode.setAttribute('value', this.params.bodies[y][x])
+      let inputNode = null
+      if (type === 'number') {
+        inputNode = document.createElement('input')
+        inputNode.setAttribute('type', 'text')
+        inputNode.setAttribute('value', this.params.bodies[y][x])
+      } else {
+        inputNode = document.createElement('textarea')
+        inputNode.value = this.params.bodies[y][x]
 
+        // テキストエリアに改行文字が追加されてしまう現象を回避
+        inputNode.addEventListener('keyup', (event) => {
+          if (event.code === 'Enter') {
+            inputNode.value = inputNode.value.replace(/(?:\r\n|\r|\n)$/, '')
+          }
+        }, { once: true })
+
+      }
       inputNode.addEventListener('keydown', (event) => {
         // TODO: Safari で常に false の疑い
         if (!event.isComposing) {
-          if (event.code === 'Enter' || event.code === 'Tab') {
+          if (event.code === 'Enter' && event.metaKey && type === 'string') {
+
+            const pos = inputNode.selectionStart
+            const before = inputNode.value.substr(0, pos)
+            const word = '\n'
+            const after = inputNode.value.substr(pos, inputNode.value.length)
+            inputNode.value = before + word + after
+            inputNode.setSelectionRange(pos + 1, pos + 1)
+
+          } else if (event.code === 'Enter' || event.code === 'Tab') {
             event.preventDefault()
             event.stopPropagation()
             this.setFocus(FocusType.Table)
@@ -338,7 +360,7 @@ class EditableTable {
             this.updateCell(x, y)
           }
         }
-      })
+      }, false)
       inputNode.addEventListener('blur', (event) => {
         this.setFocus(FocusType.Table)
         this.setInputting(false)

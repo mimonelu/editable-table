@@ -36,7 +36,7 @@ $even-rows-bg-color: #f8f8f8;
     cursor: default;
     font-family: $font-family;
     font-size: 1rem;
-    line-height: 1;
+    line-height: 1.25;
     padding: 0.5rem;
     position: relative;
     user-select: none;
@@ -64,6 +64,7 @@ $even-rows-bg-color: #f8f8f8;
 
   tr td {
     color: $body-fg-color;
+    white-space: pre;
   }
   tr td[data-type="number"] {
     text-align: right;
@@ -84,7 +85,8 @@ $even-rows-bg-color: #f8f8f8;
     padding: 0;
   }
 
-  td input[type="text"] {
+  td input[type="text"],
+  td textarea {
     appearance: none;
     background-color: $body-bg-color;
     border-style: none;
@@ -93,10 +95,22 @@ $even-rows-bg-color: #f8f8f8;
     display: block;
     font-family: $font-family;
     font-size: 1rem;
-    line-height: 0;
+    line-height: 1.25;
     outline-style: none;
-    padding: 0 0.5rem;
+    white-space: nowrap;
     width: 100%;
+    min-width: 8rem;
+  }
+
+  td input[type="text"] {
+    padding: 0 0.5rem;
+  }
+
+  td textarea {
+    padding: 0.5rem;
+    height: 100%;
+    min-height: 3.5rem;
+    white-space: pre-line;
   }
 
   tr td[data-type="boolean"] {
