@@ -19,7 +19,7 @@ class EditableTable {
     this.theadNode = null
     this.tbodyNode = null
     this.cursor = { x: 0, y: 0 }
-    this.isEditing = false
+    this.isInputting = false
     this.listboxNode = null
     this.listboxSelectedIndex = 0
     this.appendTable()
@@ -95,9 +95,20 @@ class EditableTable {
       const type = typeof this.params.bodies[y][x]
       const regulation = this.regulations[y][x]
       tdNode.setAttribute('data-type', type)
+      tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
       tdNode.setAttribute('data-regulation', regulation.type || '')
       tdNode.innerHTML = ''
-      if (type === 'boolean') {
+      if (regulation.type === 'button') {
+        const buttonNode = document.createElement('div')
+        const textNode = document.createTextNode(this.params.bodies[y][x])
+        buttonNode.setAttribute('class', 'editable-table__button')
+        buttonNode.addEventListener('click', () => {
+          this.setCursor(x, y, false)
+          regulation.callback(x, y)
+        }, false)
+        buttonNode.appendChild(textNode)
+        tdNode.appendChild(buttonNode)
+      } else if (type === 'boolean') {
         tdNode.setAttribute('data-checked', this.params.bodies[y][x].toString())
       } else {
         const textNode = document.createTextNode(this.params.bodies[y][x])
@@ -117,20 +128,28 @@ class EditableTable {
     for (let y = 0; y < rowNumber; y ++) {
       this.params.bodies[y] = []
       for (let x = 0; x < columnNumber; x ++) {
-        const value = (x % 4) === 0 ? (Math.random() >= 0.5) :
-          (x % 4) === 1 ? (Math.floor(Math.random() * 201) - 100) :
-          (x % 4) === 2 ? (String.fromCharCode(65 + x) + y) :
-          options[Math.floor(Math.random() * options.length)]
+        const value = (x % 5) === 0 ? (Math.random() >= 0.5) :
+          (x % 5) === 1 ? (Math.floor(Math.random() * 201) - 100) :
+          (x % 5) === 2 ? (String.fromCharCode(65 + x) + y) :
+          (x % 5) === 3 ? options[Math.floor(Math.random() * options.length)] :
+          'Button'
         this.params.bodies[y].push(value)
       }
     }
     this.resetRegulations()
     for (let y = 0; y < rowNumber; y ++) {
       for (let x = 0; x < columnNumber; x ++) {
-        if ((x % 4) === 3) {
+        if ((x % 5) === 3) {
           this.setCellRegulation(x, y, {
             type: 'select',
             options
+          })
+        } else if ((x % 5) === 4) {
+          this.setCellRegulation(x, y, {
+            type: 'button',
+            callback: (x, y) => {
+              alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
+            }
           })
         }
       }
@@ -182,12 +201,12 @@ class EditableTable {
     // TODO: ポジショニングを改善する
     const box = targetNode.getBoundingClientRect()
     const margin = 16
-    let left = box.left
+    let left = box.left - 1
     let top = 0
     let maxHeight = - 1
     if (this.listboxNode.clientHeight < document.documentElement.clientHeight) {
       if (this.listboxNode.clientHeight + (targetNode.offsetTop - this.containerNode.scrollTop) < document.documentElement.clientHeight) {
-        top = box.top
+        top = box.top - 1
       } else {
         top = document.documentElement.clientHeight - this.listboxNode.clientHeight - margin
       }
@@ -238,7 +257,12 @@ class EditableTable {
 
   setCellRegulation (x, y, params) {
     this.regulations[y][x].type = params.type
-    this.regulations[y][x].options = params.options
+    if (params.callback != null) {
+      this.regulations[y][x].callback = params.callback
+    }
+    if (params.options != null) {
+      this.regulations[y][x].options = params.options
+    }
   }
 
   setFocus (value) {
@@ -246,13 +270,13 @@ class EditableTable {
     this.containerNode.setAttribute('data-focus', this.focus === FocusType.Table)
   }
 
-  setEditing (value) {
-    this.isEditing = value
-    this.containerNode.setAttribute('data-editing', this.isEditing)
+  setInputting (value) {
+    this.isInputting = value
+    this.containerNode.setAttribute('data-inputting', this.isInputting)
   }
 
   edit (x, y, selected) {
-    if (this.isEditing) {
+    if (this.isInputting) {
       return
     }
     const node = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
@@ -261,9 +285,8 @@ class EditableTable {
     }
     const type = node.getAttribute('data-type')
     const regulation = this.regulations[y][x]
-    if (type === 'boolean') {
-      this.params.bodies[y][x] = !this.params.bodies[y][x]
-      this.updateCell(x, y)
+    if (regulation.type === 'button') {
+      regulation.callback(x, y)
     } else if (regulation.type === 'select') {
       this.listboxSelectedIndex = 0
       for (let i = 0; i < regulation.options.length; i ++) {
@@ -273,8 +296,11 @@ class EditableTable {
         }
       }
       this.openListbox(node, regulation.options)
+    } else if (type === 'boolean') {
+      this.params.bodies[y][x] = !this.params.bodies[y][x]
+      this.updateCell(x, y)
     } else {
-      this.setEditing(true)
+      this.setInputting(true)
       this.setFocus(FocusType.None)
       node.innerHTML = ''
       const inputNode = document.createElement('input')
@@ -288,7 +314,7 @@ class EditableTable {
             event.preventDefault()
             event.stopPropagation()
             this.setFocus(FocusType.Table)
-            this.setEditing(false)
+            this.setInputting(false)
             if (this.params.forceConversion) {
               const value = type === 'boolean' ? Boolean(inputNode.value) : type === 'number' ? Number(inputNode.value) : inputNode.value
               this.params.bodies[y][x] = value
@@ -308,14 +334,14 @@ class EditableTable {
           } else if (event.code === 'Escape') {
             event.stopPropagation()
             this.setFocus(FocusType.Table)
-            this.setEditing(false)
+            this.setInputting(false)
             this.updateCell(x, y)
           }
         }
       })
       inputNode.addEventListener('blur', (event) => {
         this.setFocus(FocusType.Table)
-        this.setEditing(false)
+        this.setInputting(false)
         this.updateCell(x, y)
       }, false)
 
@@ -331,19 +357,15 @@ class EditableTable {
     }
   }
 
-  removeCursor () {
-    const cellOnCursor = this.tableNode.querySelector('[data-cursor="true"]')
-    if (cellOnCursor) {
-      cellOnCursor.removeAttribute('data-cursor')
-    }
-  }
-
   setCursor (x, y, enableScroll = true) {
     if (this.isCursorValid(x, y)) {
-      this.removeCursor()
+      const cellOnCursor = this.tableNode.querySelector('[data-cursor="true"]')
+      if (cellOnCursor) {
+        cellOnCursor.setAttribute('data-cursor', 'false')
+      }
       const cell = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
       if (cell) {
-        cell.setAttribute('data-cursor', true)
+        cell.setAttribute('data-cursor', 'true')
         if (enableScroll) {
           cell.scrollIntoView({
             block: 'center',
@@ -429,9 +451,7 @@ class EditableTable {
       if (event.target.closest('td')) {
         const x = parseInt(event.target.getAttribute('data-x'), 10)
         const y = parseInt(event.target.getAttribute('data-y'), 10)
-        if (this.cursor.x !== x || this.cursor.y !== y) {
-          this.setCursor(x, y, false)
-        }
+        this.setCursor(x, y, false)
       }
     } else {
       this.setFocus(FocusType.None)
@@ -503,7 +523,7 @@ class EditableTable {
             event.preventDefault()
             this.edit(this.cursor.x, this.cursor.y, false)
           } else {
-            if (regulation.type === 'select') {
+            if (type === 'boolean' || regulation.type === 'button' || regulation.type === 'select') {
               event.preventDefault()
             }
             this.onEtceteraKeyDown(event)
@@ -515,7 +535,9 @@ class EditableTable {
           break
         }
         default: {
-          this.onEtceteraKeyDown(event)
+          if (type !== 'boolean' && regulation.type !== 'button' && regulation.type !== 'select') {
+            this.onEtceteraKeyDown(event)
+          }
           break
         }
       }

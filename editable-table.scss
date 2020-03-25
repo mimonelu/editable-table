@@ -8,7 +8,7 @@ $body-fg-color: #303030;
 $even-rows-bg-color: #f8f8f8;
 
 .editable-table {
-  border: 1px solid $border-color;
+  border: 2px solid $border-color;
   box-sizing: border-box;
   display: inline-block;
   -moz-osx-font-smoothing: grayscale;
@@ -18,7 +18,7 @@ $even-rows-bg-color: #f8f8f8;
   max-width: 100%;
   max-height: 100%;
   &[data-focus="true"] {
-    outline: 2px solid $accent-color;
+    border-color: $accent-color;
   }
 
   table {
@@ -68,6 +68,10 @@ $even-rows-bg-color: #f8f8f8;
   tr td[data-type="number"] {
     text-align: right;
   }
+  tr td[data-regulation="button"] {
+    cursor: pointer;
+    padding: 0.25rem;
+  }
   tr:nth-child(even) td {
     background-color: $even-rows-bg-color;
   }
@@ -75,7 +79,7 @@ $even-rows-bg-color: #f8f8f8;
     background-color: $accent-color;
     color: $body-bg-color;
   }
-  &[data-editing="true"] td[data-cursor="true"] {
+  &[data-inputting="true"] td[data-cursor="true"] {
     background-color: $body-bg-color;
     padding: 0;
   }
@@ -95,8 +99,11 @@ $even-rows-bg-color: #f8f8f8;
     width: 100%;
   }
 
-  td[data-type="boolean"] {
+  tr td[data-type="boolean"] {
     cursor: pointer;
+    &[data-cursor="false"]:hover {
+      color: $accent-color;
+    }
 
     &::before {
       content: "✔";
@@ -106,15 +113,25 @@ $even-rows-bg-color: #f8f8f8;
     }
   }
 
+  tr td[data-regulation="select"] {
+    padding-right: 1.5rem;
+
+    &::after {
+      content: "▼";
+      opacity: 0.125;
+      position: absolute;
+      right: 0.5rem;
+    }
+  }
+
   &__listbox {
     background-color: $body-bg-color;
+    border: 2px solid $accent-color;
     box-sizing: border-box;
-    border: 1px solid $border-color;
     color: $body-fg-color;
     list-style: none;
     margin: 0;
     overflow-y: scroll;
-    outline: 2px solid $accent-color;
     padding: 0;
     position: fixed;
     z-index: 4;
@@ -131,6 +148,18 @@ $even-rows-bg-color: #f8f8f8;
         background-color: $accent-color;
         color: $body-bg-color;
       }
+    }
+  }
+
+  &__button {
+    background-color: $body-bg-color;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+    color: $body-fg-color;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    &:hover {
+      background-color: mix($body-bg-color, $accent-color, 87.5%);
     }
   }
 }
