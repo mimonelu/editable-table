@@ -105,4 +105,32 @@ $even-rows-bg-color: #f8f8f8;
       opacity: 0.125;
     }
   }
+
+  &__listbox {
+    background-color: $body-bg-color;
+    box-sizing: border-box;
+    border: 1px solid $border-color;
+    color: $body-fg-color;
+    list-style: none;
+    margin: 0;
+    overflow-y: scroll;
+    outline: 2px solid $accent-color;
+    padding: 0;
+    position: fixed;
+    z-index: 4;
+
+    li {
+      cursor: pointer;
+      font-family: $font-family;
+      padding: 0.25rem 0.5rem;
+      user-select: none;
+      &:hover {
+        background-color: mix($body-bg-color, $accent-color, 87.5%);
+      }
+      &[data-selected="true"] {
+        background-color: $accent-color;
+        color: $body-bg-color;
+      }
+    }
+  }
 }
