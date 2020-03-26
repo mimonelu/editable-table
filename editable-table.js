@@ -310,11 +310,17 @@ class EditableTable {
       let inputNode = null
       if (type === 'number') {
         inputNode = document.createElement('input')
+        inputNode.setAttribute('size', '1')
         inputNode.setAttribute('type', 'text')
         inputNode.setAttribute('value', this.params.bodies[y][x])
+        node.appendChild(inputNode)
       } else {
         inputNode = document.createElement('textarea')
+        inputNode.setAttribute('cols', '1')
+        inputNode.setAttribute('rows', '1')
+        inputNode.setAttribute('wrap', 'off')
         inputNode.value = this.params.bodies[y][x]
+        node.appendChild(inputNode)
 
         // テキストエリアに改行文字が追加されてしまう現象を回避
         inputNode.addEventListener('keyup', (event) => {
@@ -324,6 +330,15 @@ class EditableTable {
         }, { once: true })
 
       }
+
+      // テキストエリアのサイズを内容に合わせる
+      this.resizeNodeToFitContent(inputNode)
+      inputNode.addEventListener('keydown', () => {
+        setTimeout(() => {
+          this.resizeNodeToFitContent(inputNode)
+        }, 0)
+      }, false)
+
       inputNode.addEventListener('keydown', (event) => {
         // TODO: Safari で常に false の疑い
         if (!event.isComposing) {
@@ -371,7 +386,6 @@ class EditableTable {
         this.updateCell(x, y)
       }, false)
 
-      node.appendChild(inputNode)
       // NOTICE: DOM ツリー追加後であること
       if (selected) {
         inputNode.addEventListener('focus', inputNode.select, false)
@@ -380,6 +394,15 @@ class EditableTable {
         inputNode.setSelectionRange(length, length)
       }
       inputNode.focus()
+    }
+  }
+
+  resizeNodeToFitContent (node) {
+    if (node.parentNode) {
+      node.style['width'] = 'auto'
+      node.style['width'] = `${Math.max(node.scrollWidth, node.parentNode.clientWidth) + 16}px`
+      node.style['height'] = 'auto'
+      node.style['height'] = `${Math.max(node.scrollHeight, node.parentNode.clientHeight)}px`
     }
   }
 
