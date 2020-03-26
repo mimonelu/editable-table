@@ -8,17 +8,19 @@ $body-fg-color: #303030;
 $even-rows-bg-color: #f8f8f8;
 
 .editable-table {
-  border: 2px solid $border-color;
-  box-sizing: border-box;
-  display: inline-block;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-font-smoothing: antialiased;
-  overflow: auto;
-  position: relative;
-  max-width: 100%;
-  max-height: 100%;
-  &[data-focus="true"] {
-    border-color: $accent-color;
+  &__wrapper {
+    border: 2px solid $border-color;
+    box-sizing: border-box;
+    display: inline-block;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    overflow: auto;
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+    [data-focus="true"] & {
+      border-color: $accent-color;
+    }
   }
 
   table {
@@ -110,6 +112,7 @@ $even-rows-bg-color: #f8f8f8;
     padding: 0.5rem;
     height: 100%;
     min-height: 3.5rem;
+    resize: none;
     white-space: pre-line;
   }
 

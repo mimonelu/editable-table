@@ -15,6 +15,7 @@ class EditableTable {
     this.focus = !!this.params.focus ? FocusType.Table : FocusType.None
     this.regulations = []
     this.containerNode = null
+    this.wrapperNode = null
     this.tableNode = null
     this.theadNode = null
     this.tbodyNode = null
@@ -28,15 +29,18 @@ class EditableTable {
 
   appendTable () {
     this.containerNode = document.createElement('div')
+    this.wrapperNode = document.createElement('div')
     this.tableNode = document.createElement('table')
     this.theadNode = document.createElement('thead')
     this.tbodyNode = document.createElement('tbody')
     this.containerNode.setAttribute('class', 'editable-table')
+    this.wrapperNode.setAttribute('class', 'editable-table__wrapper')
     this.updateHeaders()
     this.updateBodies()
     this.tableNode.appendChild(this.theadNode)
     this.tableNode.appendChild(this.tbodyNode)
-    this.containerNode.appendChild(this.tableNode)
+    this.wrapperNode.appendChild(this.tableNode)
+    this.containerNode.appendChild(this.wrapperNode)
     this.params.containerNode.appendChild(this.containerNode)
     this.setFocus(this.focus)
     window.addEventListener('click', this.onClick.bind(this), false)
@@ -205,7 +209,7 @@ class EditableTable {
     let top = 0
     let maxHeight = - 1
     if (this.listboxNode.clientHeight < document.documentElement.clientHeight) {
-      if (this.listboxNode.clientHeight + (targetNode.offsetTop - this.containerNode.scrollTop) < document.documentElement.clientHeight) {
+      if (this.listboxNode.clientHeight + (targetNode.offsetTop - this.wrapperNode.scrollTop) < document.documentElement.clientHeight) {
         top = box.top - 1
       } else {
         top = document.documentElement.clientHeight - this.listboxNode.clientHeight - margin
