@@ -1,5 +1,3 @@
-import './editable-table.scss'
-
 const FocusType = {
   None: 0,
   Table: 1,

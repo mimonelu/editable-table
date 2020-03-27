@@ -1,11 +1,11 @@
 {
   "name": "editable-table-js",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "dist/editable-table.js",
   "scripts": {
-    "dev": "parcel watch --global EditableTable --no-cache --no-hmr --no-source-maps --target browser ./editable-table.js -d ./dist",
-    "build": "parcel build --global EditableTable --no-cache --no-source-maps --target browser ./editable-table.js -d ./dist"
+    "dev": "parcel watch --global EditableTable --no-cache --no-hmr --no-source-maps --target browser ./editable-table.js ./editable-table.scss -d ./dist",
+    "build": "parcel build --global EditableTable --no-cache --no-source-maps --target browser ./editable-table.js ./editable-table.scss -d ./dist"
   },
   "browserslist": [
     "> 0.25%",
