@@ -171,9 +171,10 @@ $even-rows-bg-color: #f8f8f8;
     background-color: $body-bg-color;
     border: 1px solid $border-color;
     border-radius: 4px;
+    box-sizing: border-box;
     color: $body-fg-color;
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    padding: 0.2rem 0.5rem; // NOTICE: `0.25rem` だと Chrome でズレる
     &:hover {
       background-color: mix($body-bg-color, $accent-color, 87.5%);
     }
