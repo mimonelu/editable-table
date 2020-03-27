@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "editable-table.js",
+  "private": "true",
   "scripts": {
     "dev": "parcel watch --global EditableTable --no-cache --no-hmr --no-source-maps --target browser ./editable-table.js -d ./dist",
     "build": "parcel build --global EditableTable --no-cache --no-source-maps --target browser ./editable-table.js -d ./dist"
