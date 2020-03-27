@@ -654,4 +654,4 @@ class EditableTable {
   }
 }
 
-module.exports = EditableTable
+export default EditableTable
