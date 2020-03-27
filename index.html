@@ -2,16 +2,35 @@
   <head>
     <style>
 html {
-  font-size: calc(13px + 0.375vw);
+  font-size: calc(13px + 0.5vw);
 }
 body {
+  background-color: #d0d0b0;
   font-size: 1rem;
+  margin: 1rem;
+}
+h1 {
+  margin-bottom: 1rem;
+}
+.editable-table__container {
+  margin-bottom: 1rem;
+  max-height: 320px;
+}
+small {
+  display: block;
+  text-align: center;
 }
     </style>
     <link href="./dist/editable-table.css" rel="stylesheet">
   </head>
   <body>
+    <header>
+      <h1>editable-table-js</h1>
+    </header>
     <div class="container"></div>
+    <footer>
+      <small>&copy; 2020 mimonelu</small>
+    </footer>
     <script src="./dist/editable-table.js"></script>
     <script>
 const editableTable = new EditableTable({
@@ -29,7 +48,7 @@ const editableTable = new EditableTable({
   focus: true,
   forceConversion: true,
 })
-editableTable.setSampleData(50, 30)
+editableTable.setSampleData(50, 26)
     </script>
   </body>
 </html>

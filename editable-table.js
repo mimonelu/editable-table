@@ -15,7 +15,6 @@ class EditableTable {
     this.focus = !!this.params.focus ? FocusType.Table : FocusType.None
     this.regulations = []
     this.containerNode = null
-    this.wrapperNode = null
     this.tableNode = null
     this.theadNode = null
     this.tbodyNode = null
@@ -29,18 +28,15 @@ class EditableTable {
 
   appendTable () {
     this.containerNode = document.createElement('div')
-    this.wrapperNode = document.createElement('div')
     this.tableNode = document.createElement('table')
     this.theadNode = document.createElement('thead')
     this.tbodyNode = document.createElement('tbody')
-    this.containerNode.setAttribute('class', 'editable-table')
-    this.wrapperNode.setAttribute('class', 'editable-table__wrapper')
+    this.containerNode.setAttribute('class', 'editable-table__container')
     this.updateHeaders()
     this.updateBodies()
     this.tableNode.appendChild(this.theadNode)
     this.tableNode.appendChild(this.tbodyNode)
-    this.wrapperNode.appendChild(this.tableNode)
-    this.containerNode.appendChild(this.wrapperNode)
+    this.containerNode.appendChild(this.tableNode)
     this.params.containerNode.appendChild(this.containerNode)
     this.setFocus(this.focus)
     window.addEventListener('click', this.onClick.bind(this), false)
@@ -121,6 +117,18 @@ class EditableTable {
     }
   }
 
+  setCell (x, y, value) {
+    const node = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
+    const type = node.getAttribute('data-type')
+    if (this.params.forceConversion) {
+      const v = type === 'boolean' ? Boolean(value) : type === 'number' ? Number(value) : value
+      this.params.bodies[y][x] = v
+    } else {
+      this.params.bodies[y][x] = value
+    }
+    this.updateCell(x, y, node)
+  }
+
   setSampleData (rowNumber, columnNumber) {
     const options = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ]
     this.params.headers.splice(0)
@@ -178,7 +186,7 @@ class EditableTable {
     this.listboxNode = document.createElement('ol')
     this.listboxNode.setAttribute('class', 'editable-table__listbox')
     this.listboxNode.style['display'] = 'none'
-    this.containerNode.appendChild(this.listboxNode)
+    this.params.containerNode.appendChild(this.listboxNode)
   }
 
   openListbox (targetNode, options) {
@@ -209,7 +217,7 @@ class EditableTable {
     let top = 0
     let maxHeight = - 1
     if (this.listboxNode.clientHeight < document.documentElement.clientHeight) {
-      if (this.listboxNode.clientHeight + (targetNode.offsetTop - this.wrapperNode.scrollTop) < document.documentElement.clientHeight) {
+      if (this.listboxNode.clientHeight + (targetNode.offsetTop - this.containerNode.scrollTop) < document.documentElement.clientHeight) {
         top = box.top - 1
       } else {
         top = document.documentElement.clientHeight - this.listboxNode.clientHeight - margin
@@ -311,6 +319,7 @@ class EditableTable {
       if (type === 'number') {
         inputNode = document.createElement('input')
         inputNode.setAttribute('size', '1')
+        inputNode.setAttribute('spellcheck', 'false')
         inputNode.setAttribute('type', 'text')
         inputNode.setAttribute('value', this.params.bodies[y][x])
         node.appendChild(inputNode)
@@ -318,6 +327,7 @@ class EditableTable {
         inputNode = document.createElement('textarea')
         inputNode.setAttribute('cols', '1')
         inputNode.setAttribute('rows', '1')
+        inputNode.setAttribute('spellcheck', 'false')
         inputNode.setAttribute('wrap', 'off')
         inputNode.value = this.params.bodies[y][x]
         node.appendChild(inputNode)
@@ -356,13 +366,7 @@ class EditableTable {
             event.stopPropagation()
             this.setFocus(FocusType.Table)
             this.setInputting(false)
-            if (this.params.forceConversion) {
-              const value = type === 'boolean' ? Boolean(inputNode.value) : type === 'number' ? Number(inputNode.value) : inputNode.value
-              this.params.bodies[y][x] = value
-            } else {
-              this.params.bodies[y][x] = inputNode.value
-            }
-            this.updateCell(x, y)
+            this.setCell(x, y, inputNode.value)
             if (event.code === 'Enter') {
               this.setCursorToDown()
             } else if (event.code === 'Tab') {
@@ -400,7 +404,7 @@ class EditableTable {
   resizeNodeToFitContent (node) {
     if (node.parentNode) {
       node.style['width'] = 'auto'
-      node.style['width'] = `${Math.max(node.scrollWidth, node.parentNode.clientWidth) + 16}px`
+      node.style['width'] = `${Math.max(node.scrollWidth, node.parentNode.clientWidth) + 32}px`
       node.style['height'] = 'auto'
       node.style['height'] = `${Math.max(node.scrollHeight, node.parentNode.clientHeight)}px`
     }
@@ -494,7 +498,7 @@ class EditableTable {
   }
 
   onClick (event) {
-    if (event.target.closest('.editable-table')) {
+    if (event.target.closest('.editable-table__container') || event.target.closest('.editable-table__listbox')) {
       this.setFocus(FocusType.Table)
       this.closeListbox()
       if (event.target.closest('td')) {
@@ -579,7 +583,15 @@ class EditableTable {
           }
           break
         }
+        case 'Backspace': {
+          event.preventDefault()
+          if ((type === 'boolean' || type === 'number' || type === 'string') && (regulation.type !== 'button' && regulation.type !== 'select')) {
+            this.setCell(this.cursor.x, this.cursor.y, '')
+          }
+          break
+        }
         case 'Escape': {
+          event.preventDefault()
           this.setFocus(FocusType.None)
           break
         }
