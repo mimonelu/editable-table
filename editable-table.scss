@@ -81,7 +81,6 @@ $accent-color: #0080f0;
       background-color: mix($bg-color, $accent-color, 50%);
     }
     &[data-inputting="true"] tr td[data-cursor="true"] {
-      background-color: $bg-color;
       padding: 0;
     }
 
@@ -96,7 +95,7 @@ $accent-color: #0080f0;
       font-family: $font-family;
       font-size: 1rem;
       line-height: 1.25;
-      outline-style: none;
+      outline: 2px solid $accent-color;
     }
 
     td input[type="text"] {
