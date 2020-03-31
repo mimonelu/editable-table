@@ -40,6 +40,7 @@ class EditableTable {
     window.addEventListener('click', this.onClick.bind(this), false)
     window.addEventListener('dblclick', this.onDoubleClick.bind(this), false)
     window.addEventListener('keydown', this.onKeyDown.bind(this), false)
+    window.addEventListener('keyup', this.onKeyUp.bind(this), false)
   }
 
   updateHeaders () {
@@ -329,14 +330,6 @@ class EditableTable {
         inputNode.setAttribute('wrap', 'off')
         inputNode.value = this.params.bodies[y][x]
         node.appendChild(inputNode)
-
-        // テキストエリアに改行文字が追加されてしまう現象を回避
-        inputNode.addEventListener('keyup', (event) => {
-          if (event.code === 'Enter') {
-            inputNode.value = inputNode.value.replace(/(?:\r\n|\r|\n)$/, '')
-          }
-        }, { once: true })
-
       }
 
       // テキストエリアのサイズを内容に合わせる
@@ -347,38 +340,72 @@ class EditableTable {
         }, 0)
       }, false)
 
+      let isComposed = false
+
       inputNode.addEventListener('keydown', (event) => {
         // TODO: Safari で常に false の疑い
-        if (!event.isComposing) {
-          if (event.code === 'Enter' && event.metaKey && type === 'string') {
-
-            const pos = inputNode.selectionStart
-            const before = inputNode.value.substr(0, pos)
-            const word = '\n'
-            const after = inputNode.value.substr(pos, inputNode.value.length)
-            inputNode.value = before + word + after
-            inputNode.setSelectionRange(pos + 1, pos + 1)
-
-          } else if (event.code === 'Enter' || event.code === 'Tab') {
-            event.preventDefault()
-            event.stopPropagation()
-            this.setFocus(FocusType.Table)
-            this.setInputting(false)
-            this.setCell(x, y, inputNode.value)
-            if (event.code === 'Enter') {
-              this.setCursorToDown()
-            } else if (event.code === 'Tab') {
+        if (event.isComposing) {
+          if (event.code === 'Enter') {
+            isComposed = true
+          }
+        } else {
+          switch (event.code) {
+            case 'Enter': {
+              if (type === 'string') {
+                // 文章内改行
+                // NOTICE: Chrome では onKeyDown で ⌘ ＋ Enter をキャッチできない模様
+                if (event.metaKey) {
+                  const pos = inputNode.selectionStart
+                  const before = inputNode.value.substr(0, pos)
+                  const word = '\n'
+                  const after = inputNode.value.substr(pos, inputNode.value.length)
+                  inputNode.value = before + word + after
+                  inputNode.setSelectionRange(pos + 1, pos + 1)
+                } else {
+                  event.preventDefault()
+                }
+              }
+              break
+            }
+            case 'Tab': {
+              event.preventDefault()
+              event.stopPropagation()
+              this.setFocus(FocusType.Table)
+              this.setInputting(false)
+              this.setCell(x, y, inputNode.value)
               if (event.shiftKey) {
                 this.setCursorToLeft()
               } else {
                 this.setCursorToRight()
               }
+              break
             }
-          } else if (event.code === 'Escape') {
-            event.stopPropagation()
-            this.setFocus(FocusType.Table)
-            this.setInputting(false)
-            this.updateCell(x, y)
+            case 'Escape': {
+              event.stopPropagation()
+              this.setFocus(FocusType.Table)
+              this.setInputting(false)
+              this.updateCell(x, y)
+              break
+            }
+          }
+        }
+      }, false)
+      inputNode.addEventListener('keyup', (event) => {
+        switch (event.code) {
+          case 'Enter': {
+            // 編集完了
+            if (!isComposed && !event.metaKey) {
+              event.preventDefault()
+              event.stopPropagation()
+              this.setFocus(FocusType.Table)
+              this.setInputting(false)
+              this.setCell(x, y, inputNode.value)
+              this.setCursorToDown()
+            }
+            if (isComposed) {
+              isComposed = false
+            }
+            break
           }
         }
       }, false)
@@ -565,10 +592,6 @@ class EditableTable {
           }
           break
         }
-        case 'Enter': {
-          this.edit(this.cursor.x, this.cursor.y, false)
-          break
-        }
         case 'Space': {
           if (type === 'boolean') {
             event.preventDefault()
@@ -623,12 +646,6 @@ class EditableTable {
           }
           break
         }
-        case 'Enter': {
-          this.updateListboxToCell(this.cursor.x, this.cursor.y)
-          this.closeListbox()
-          this.setCursorToDown()
-          break
-        }
         case 'Space': {
           event.preventDefault()
           this.updateListboxToCell(this.cursor.x, this.cursor.y)
@@ -652,6 +669,26 @@ class EditableTable {
       }
     }
   }
+
+  onKeyUp (event) {
+    if (this.focus === FocusType.Table) {
+      switch (event.code) {
+        case 'Enter': {
+          this.edit(this.cursor.x, this.cursor.y, false)
+          break
+        }
+      }
+    } else if (this.focus === FocusType.Listbox) {
+      switch (event.code) {
+        case 'Enter': {
+          this.updateListboxToCell(this.cursor.x, this.cursor.y)
+          this.closeListbox()
+          this.setCursorToDown()
+          break
+        }
+      }
+    }
+  }
 }
 
-export default EditableTable
+module.exports = EditableTable
