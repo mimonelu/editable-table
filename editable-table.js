@@ -100,7 +100,6 @@ class EditableTable {
       if (regulation.type === 'button') {
         const buttonNode = document.createElement('div')
         const textNode = document.createTextNode(this.params.bodies[y][x])
-        buttonNode.setAttribute('class', 'editable-table__button')
         buttonNode.addEventListener('click', () => {
           this.setCursor(x, y, false)
           regulation.callback(x, y)

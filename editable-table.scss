@@ -5,9 +5,16 @@ $accent-color: #0080f0;
 
 .editable-table {
   &__container {
+    &, * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    // ======== Container ========
+
     background-color: $bg-color;
     border: 2px solid mix($bg-color, $fg-color, 75%);
-    box-sizing: border-box;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
     overflow: auto;
@@ -17,13 +24,19 @@ $accent-color: #0080f0;
       border-color: $accent-color;
     }
 
+    // ======== TABLE ========
+
     table {
       border-spacing: 0;
     }
 
+    // ======== TBODY ========
+
     tbody {
       overflow: auto;
     }
+
+    // ======== TH and TD ========
 
     th,
     td {
@@ -38,6 +51,8 @@ $accent-color: #0080f0;
       user-select: none;
     }
 
+    // ======== TH ========
+
     th {
       background-color: mix($bg-color, $fg-color, 87.5%);
       color: $fg-color;
@@ -48,15 +63,17 @@ $accent-color: #0080f0;
     thead th {
       top: 0;
       z-index: 2;
-    }
-    thead th:first-child {
-      left: 0;
-      z-index: 3;
+      &:first-child {
+        left: 0;
+        z-index: 3;
+      }
     }
     tbody th {
       left: 0;
       z-index: 1;
     }
+
+    // ======== TD ========
 
     tr td {
       background-color: $bg-color;
@@ -65,13 +82,6 @@ $accent-color: #0080f0;
     }
     tr:nth-child(even) td {
       background-color: mix($bg-color, $fg-color, 93.75%);
-    }
-    tr td[data-type="number"] {
-      text-align: right;
-    }
-    tr td[data-regulation="button"] {
-      cursor: pointer;
-      padding: 0.25rem;
     }
     tr td[data-cursor="true"] {
       background-color: $accent-color;
@@ -84,34 +94,7 @@ $accent-color: #0080f0;
       padding: 0;
     }
 
-    td input[type="text"],
-    td textarea {
-      appearance: none;
-      background-color: $bg-color;
-      border-style: none;
-      box-sizing: border-box;
-      color: $fg-color;
-      display: block;
-      font-family: $font-family;
-      font-size: 1rem;
-      line-height: 1.25;
-      outline: 2px solid $accent-color;
-    }
-
-    td input[type="text"] {
-      padding: 0 0.5rem;
-    }
-
-    td textarea {
-      height: 100%;
-      overflow: hidden;
-      overflow-wrap: normal;
-      padding: 0.5rem;
-      resize: none;
-      word-break: keep-all;
-      white-space: pre-line;
-      word-break: keep-all;
-    }
+    // ======== Boolean Type ========
 
     tr td[data-type="boolean"] {
       cursor: pointer;
@@ -127,6 +110,66 @@ $accent-color: #0080f0;
       }
     }
 
+    // ======== Number and Text Type ========
+
+    td input[type="text"],
+    td textarea {
+      appearance: none;
+      background-color: $bg-color;
+      border-style: none;
+      color: $fg-color;
+      display: block;
+      font-family: $font-family;
+      font-size: 1rem;
+      outline: 2px solid $accent-color;
+      position: relative;
+      z-index: 3;
+    }
+
+    // ======== Number Type ========
+
+    tr td[data-type="number"] {
+      text-align: right;
+    }
+
+    td input[type="text"] {
+      padding: 0 0.5rem;
+    }
+
+    // ======== Text Type ========
+
+    td textarea {
+      height: 100%;
+      overflow: hidden;
+      overflow-wrap: normal;
+      padding: 0.5rem;
+      resize: none;
+      word-break: keep-all;
+      white-space: pre-line;
+      word-break: keep-all;
+    }
+
+    // ======== Button Regulation ========
+
+    tr td[data-regulation="button"] {
+      cursor: pointer;
+      padding: 0.25rem;
+
+      div {
+        background-color: $bg-color;
+        border: 1px solid mix($bg-color, $fg-color, 75%);
+        border-radius: 4px;
+        color: $fg-color;
+        cursor: pointer;
+        padding: 0.2rem 0.5rem; // NOTICE: `0.25rem` だと Chrome でズレる
+        &:hover {
+          background-color: mix($bg-color, $accent-color, 87.5%);
+        }
+      }
+    }
+
+    // ======== Select Regulation ========
+
     tr td[data-regulation="select"] {
       padding-right: 1.5rem;
 
@@ -139,18 +182,7 @@ $accent-color: #0080f0;
     }
   }
 
-  &__button {
-    background-color: $bg-color;
-    border: 1px solid mix($bg-color, $fg-color, 75%);
-    border-radius: 4px;
-    box-sizing: border-box;
-    color: $fg-color;
-    cursor: pointer;
-    padding: 0.2rem 0.5rem; // NOTICE: `0.25rem` だと Chrome でズレる
-    &:hover {
-      background-color: mix($bg-color, $accent-color, 87.5%);
-    }
-  }
+  // ======== Listbox Regulation ========
 
   &__listbox {
     background-color: $bg-color;
