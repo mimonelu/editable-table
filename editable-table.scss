@@ -98,6 +98,7 @@ $accent-color: #0080f0;
 
     tr td[data-type="boolean"] {
       cursor: pointer;
+      text-align: center;
       &[data-cursor="false"]:hover {
         color: $accent-color;
       }

@@ -30,6 +30,7 @@ class EditableTable {
     this.theadNode = document.createElement('thead')
     this.tbodyNode = document.createElement('tbody')
     this.containerNode.setAttribute('class', 'editable-table__container')
+    this.resetRegulations()
     this.updateHeaders()
     this.updateBodies()
     this.tableNode.appendChild(this.theadNode)
@@ -44,6 +45,7 @@ class EditableTable {
   }
 
   updateHeaders () {
+    this.theadNode.innerHTML = ''
     if (this.params.headers.length > 0) {
       const trNode = document.createElement('tr')
       this.appendHeader(trNode, '')
@@ -63,6 +65,7 @@ class EditableTable {
 
   updateBodies () {
     const height = this.getHeight()
+    this.tbodyNode.innerHTML = ''
     for (let y = 0; y < height; y ++) {
       const trNode = document.createElement('tr')
       this.appendBodyHeader(trNode, y)
@@ -91,7 +94,7 @@ class EditableTable {
       tdNode = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
     }
     if (tdNode) {
-      const type = typeof this.params.bodies[y][x]
+      const type = this.params.bodies[y][x] == null ? 'number' : typeof this.params.bodies[y][x]
       const regulation = this.regulations[y][x]
       tdNode.setAttribute('data-type', type)
       tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
@@ -108,7 +111,7 @@ class EditableTable {
         tdNode.appendChild(buttonNode)
       } else if (type === 'boolean') {
         tdNode.setAttribute('data-checked', this.params.bodies[y][x].toString())
-      } else {
+      } else if (this.params.bodies[y][x] != null) {
         const textNode = document.createTextNode(this.params.bodies[y][x])
         tdNode.appendChild(textNode)
       }
@@ -119,12 +122,22 @@ class EditableTable {
     const node = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
     const type = node.getAttribute('data-type')
     if (this.params.forceConversion) {
-      const v = type === 'boolean' ? Boolean(value) : type === 'number' ? Number(value) : value
+      const v = type === 'boolean' ? Boolean(value) : type === 'number' ? (value === '' ? null : Number(value)) : value
       this.params.bodies[y][x] = v
     } else {
       this.params.bodies[y][x] = value
     }
     this.updateCell(x, y, node)
+  }
+
+  traverse (callback) {
+    const xLength = this.getWidth()
+    const yLength = this.getHeight()
+    for (let y = 0; y < yLength; y ++) {
+      for (let x = 0; x < xLength; x ++) {
+        callback(x, y)
+      }
+    }
   }
 
   setSampleData (rowNumber, columnNumber) {
@@ -319,7 +332,7 @@ class EditableTable {
         inputNode.setAttribute('size', '1')
         inputNode.setAttribute('spellcheck', 'false')
         inputNode.setAttribute('type', 'text')
-        inputNode.setAttribute('value', this.params.bodies[y][x])
+        inputNode.setAttribute('value', this.params.bodies[y][x] == null ? '' : this.params.bodies[y][x])
         node.appendChild(inputNode)
       } else {
         inputNode = document.createElement('textarea')
