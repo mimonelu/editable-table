@@ -140,6 +140,7 @@ $accent-color: #0080f0;
     // ======== Text Type ========
 
     td textarea {
+      line-height: 1.15;
       height: 100%;
       overflow: hidden;
       overflow-wrap: normal;
@@ -163,6 +164,7 @@ $accent-color: #0080f0;
         color: $fg-color;
         cursor: pointer;
         padding: 0.2rem 0.5rem; // NOTICE: `0.25rem` だと Chrome でズレる
+        text-align: center;
         &:hover {
           background-color: mix($bg-color, $accent-color, 87.5%);
         }

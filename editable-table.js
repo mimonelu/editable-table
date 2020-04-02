@@ -20,6 +20,11 @@ class EditableTable {
     this.isInputting = false
     this.listboxNode = null
     this.listboxSelectedIndex = 0
+    this.clipboard = {
+      type: null,
+      regulation: null,
+      value: null,
+    }
     this.appendTable()
     this.setupLlistbox()
   }
@@ -500,28 +505,6 @@ class EditableTable {
     this.setCursor(this.cursor.x, this.getHeight() - 1)
   }
 
-  setCursorToNext () {
-    const { x, y } = this.cursor
-    if (this.isCursorValid(x - 1, y)) {
-      this.setCursor(x - 1, y)
-    } else if (this.isCursorValid(this.getWidth() - 1, y - 1)) {
-      this.setCursor(this.getWidth() - 1, y - 1)
-    } else {
-      this.setCursor(this.getWidth() - 1, this.getHeight() - 1)
-    }
-  }
-
-  setCursorToPrevious () {
-    const { x, y } = this.cursor
-    if (this.isCursorValid(x + 1, y)) {
-      this.setCursor(x + 1, y)
-    } else if (this.isCursorValid(0, y + 1)) {
-      this.setCursor(0, y + 1)
-    } else {
-      this.setCursor(0, 0)
-    }
-  }
-
   isCursorValid (x, y) {
     return x >= 0 && y >= 0 && x < this.getWidth() && y < this.getHeight()
   }
@@ -598,22 +581,15 @@ class EditableTable {
         case 'Tab': {
           event.preventDefault()
           if (event.shiftKey) {
-            this.setCursorToNext()
+            this.setCursorToLeft()
           } else {
-            this.setCursorToPrevious()
+            this.setCursorToRight()
           }
           break
         }
         case 'Space': {
-          if (type === 'boolean') {
-            event.preventDefault()
-            this.edit(this.cursor.x, this.cursor.y, false)
-          } else {
-            if (type === 'boolean' || regulation.type === 'button' || regulation.type === 'select') {
-              event.preventDefault()
-            }
-            this.onEtceteraKeyDown(event)
-          }
+          event.preventDefault()
+          this.edit(this.cursor.x, this.cursor.y, type !== 'boolean')
           break
         }
         case 'Backspace': {
@@ -628,10 +604,26 @@ class EditableTable {
           this.setFocus(FocusType.None)
           break
         }
-        default: {
-          if (type !== 'boolean' && regulation.type !== 'button' && regulation.type !== 'select') {
-            this.onEtceteraKeyDown(event)
+        case 'KeyC': {
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault()
+            this.copyCell(this.cursor.x, this.cursor.y, type, regulation)
+          } else {
+            this.onEtceteraKeyDown(type, regulation, event)
           }
+          break
+        }
+        case 'KeyV': {
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault()
+            this.pasteCell(this.cursor.x, this.cursor.y, type, regulation)
+          } else {
+            this.onEtceteraKeyDown(type, regulation, event)
+          }
+          break
+        }
+        default: {
+          this.onEtceteraKeyDown(type, regulation, event)
           break
         }
       }
@@ -652,9 +644,9 @@ class EditableTable {
           event.preventDefault()
           this.closeListbox()
           if (event.shiftKey) {
-            this.setCursorToNext()
+            this.setCursorToLeft()
           } else {
-            this.setCursorToPrevious()
+            this.setCursorToRight()
           }
           break
         }
@@ -672,12 +664,14 @@ class EditableTable {
     }
   }
 
-  onEtceteraKeyDown (event) {
-    if (event.key.length === 1) {
-      const charCode = event.key.charCodeAt(0)
-      if (charCode >= 32 && charCode <= 126) {
-        this.edit(this.cursor.x, this.cursor.y, true)
-        return
+  onEtceteraKeyDown (type, regulation, event) {
+    if (type !== 'boolean' && regulation.type !== 'button' && regulation.type !== 'select') {
+      if (event.key.length === 1) {
+        const charCode = event.key.charCodeAt(0)
+        if (charCode >= 32 && charCode <= 126) {
+          this.edit(this.cursor.x, this.cursor.y, true)
+          return
+        }
       }
     }
   }
@@ -699,6 +693,30 @@ class EditableTable {
           break
         }
       }
+    }
+  }
+
+  copyCell (x, y, type, regulation) {
+    if (regulation.type === 'button') {
+      return
+    }
+
+    this.clipboard.type = type
+    this.clipboard.regulation = regulation
+    this.clipboard.value = this.params.bodies[y][x]
+  }
+
+  pasteCell (x, y, type, regulation) {
+    if (this.clipboard.type === type && this.clipboard.regulation.type === regulation.type) {
+
+      if (regulation.type === 'select') {
+        if (regulation.options.indexOf(this.clipboard.value) === - 1) {
+          return
+        }
+      }
+
+      this.params.bodies[y][x] = this.clipboard.value
+      this.updateCell(x, y)
     }
   }
 }
