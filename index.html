@@ -1,18 +1,21 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta charset="utf-8">
     <style>
+
 html {
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif;
   font-size: calc(13px + 0.5vw);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
 }
 body {
-  background-color: #d0d0b0;
-  font-size: 1rem;
+  background-color: #ffffff;
+  color: #000000;
   margin: 1rem;
 }
-h1 {
-  margin-bottom: 1rem;
-}
-.container {
+.mb1 {
   margin-bottom: 1rem;
 }
 .editable-table__container {
@@ -22,12 +25,14 @@ small {
   display: block;
   text-align: center;
 }
+
     </style>
     <link href="./dist/editable-table.css" rel="stylesheet">
   </head>
   <body>
-    <header>
-      <h1>editable-table-js</h1>
+    <header class="mb1">
+      <h1 class="mb1">editable-table-js (WIP)</h1>
+      <a href="https://github.com/mimonelu/editable-table">GitHub</a> | <a href="https://www.npmjs.com/package/editable-table-js">npm</a>
     </header>
     <div class="container"></div>
     <footer>
@@ -35,6 +40,7 @@ small {
     </footer>
     <script src="./dist/editable-table.js"></script>
     <script>
+
 const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   /*
@@ -51,6 +57,7 @@ const editableTable = new EditableTable({
   forceConversion: true,
 })
 editableTable.setSampleData(50, 26)
+
     </script>
   </body>
 </html>

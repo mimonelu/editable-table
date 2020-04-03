@@ -360,26 +360,26 @@ class EditableTable {
       let isComposed = false
 
       inputNode.addEventListener('keydown', (event) => {
+        const keyCode = event.code || event.key
         // TODO: Safari で常に false の疑い
         if (event.isComposing) {
-          if (event.code === 'Enter') {
+          if (keyCode === 'Enter') {
             isComposed = true
           }
         } else {
-          switch (event.code) {
+          switch (keyCode) {
             case 'Enter': {
               if (type === 'string') {
                 // 文章内改行
                 // NOTICE: Chrome では onKeyDown で ⌘ ＋ Enter をキャッチできない模様
-                if (event.metaKey) {
+                event.preventDefault()
+                if (event.ctrlKey || event.metaKey) {
                   const pos = inputNode.selectionStart
                   const before = inputNode.value.substr(0, pos)
                   const word = '\n'
                   const after = inputNode.value.substr(pos, inputNode.value.length)
                   inputNode.value = before + word + after
                   inputNode.setSelectionRange(pos + 1, pos + 1)
-                } else {
-                  event.preventDefault()
                 }
               }
               break
@@ -408,10 +408,11 @@ class EditableTable {
         }
       }, false)
       inputNode.addEventListener('keyup', (event) => {
-        switch (event.code) {
+        const keyCode = event.code || event.key
+        switch (keyCode) {
           case 'Enter': {
             // 編集完了
-            if (!isComposed && !event.metaKey) {
+            if (!isComposed && !event.ctrlKey && !event.metaKey) {
               event.preventDefault()
               event.stopPropagation()
               this.setFocus(FocusType.Table)
@@ -538,13 +539,15 @@ class EditableTable {
   }
 
   onKeyDown (event) {
+    const keyCode = event.code || event.key
     if (this.focus === FocusType.Table) {
       const type = typeof this.params.bodies[this.cursor.y][this.cursor.x]
       const regulation = this.regulations[this.cursor.y][this.cursor.x]
-      switch (event.code) {
+      switch (keyCode) {
         case 'ArrowLeft': {
           event.preventDefault()
-          if (event.metaKey) {
+          // TODO: `ctrlKey` + `ArrowLeft` を機能させる
+          if (event.ctrlKey || event.metaKey) {
             this.setCursorToLeftEnd()
           } else {
             this.setCursorToLeft()
@@ -553,7 +556,8 @@ class EditableTable {
         }
         case 'ArrowRight': {
           event.preventDefault()
-          if (event.metaKey) {
+          // TODO: `ctrlKey` + `ArrowRight` を機能させる
+          if (event.ctrlKey || event.metaKey) {
             this.setCursorToRightEnd()
           } else {
             this.setCursorToRight()
@@ -562,7 +566,7 @@ class EditableTable {
         }
         case 'ArrowUp': {
           event.preventDefault()
-          if (event.metaKey) {
+          if (event.ctrlKey || event.metaKey) {
             this.setCursorToTop()
           } else {
             this.setCursorToUp()
@@ -571,7 +575,7 @@ class EditableTable {
         }
         case 'ArrowDown': {
           event.preventDefault()
-          if (event.metaKey) {
+          if (event.ctrlKey || event.metaKey) {
             this.setCursorToBottom()
           } else {
             this.setCursorToDown()
@@ -587,6 +591,7 @@ class EditableTable {
           }
           break
         }
+        case ' ':
         case 'Space': {
           event.preventDefault()
           this.edit(this.cursor.x, this.cursor.y, type !== 'boolean')
@@ -629,7 +634,7 @@ class EditableTable {
       }
     } else if (this.focus === FocusType.Listbox) {
       const regulation = this.regulations[this.cursor.y][this.cursor.x]
-      switch (event.code) {
+      switch (keyCode) {
         case 'ArrowUp': {
           event.preventDefault()
           this.addListboxSelectedIndex(- 1, regulation.options)
@@ -650,6 +655,7 @@ class EditableTable {
           }
           break
         }
+        case ' ':
         case 'Space': {
           event.preventDefault()
           this.updateListboxToCell(this.cursor.x, this.cursor.y)
@@ -677,15 +683,16 @@ class EditableTable {
   }
 
   onKeyUp (event) {
+    const keyCode = event.code || event.key
     if (this.focus === FocusType.Table) {
-      switch (event.code) {
+      switch (keyCode) {
         case 'Enter': {
           this.edit(this.cursor.x, this.cursor.y, false)
           break
         }
       }
     } else if (this.focus === FocusType.Listbox) {
-      switch (event.code) {
+      switch (keyCode) {
         case 'Enter': {
           this.updateListboxToCell(this.cursor.x, this.cursor.y)
           this.closeListbox()
