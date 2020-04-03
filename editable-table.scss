@@ -47,7 +47,6 @@ $accent-color: #0080f0;
       font-size: 1rem;
       line-height: 1.25;
       padding: 0.5rem;
-      position: relative;
       user-select: none;
     }
 
@@ -59,6 +58,12 @@ $accent-color: #0080f0;
       font-weight: 700;
       position: sticky;
       white-space: nowrap;
+
+      // Edge で position: sticky; にした th で border が表示されない不具合への対処
+      // SEE: https://qiita.com/h-koeda/items/3b4c6a465ff4f81c16dc
+      _:-ms-lang(x), & {
+        background-clip: padding-box;
+      }
     }
     thead th {
       top: 0;
@@ -78,6 +83,7 @@ $accent-color: #0080f0;
     tr td {
       background-color: $bg-color;
       color: $fg-color;
+      position: relative;
       white-space: pre;
     }
     tr:nth-child(even) td {
