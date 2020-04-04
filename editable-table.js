@@ -53,7 +53,9 @@ class EditableTable {
     this.theadNode.innerHTML = ''
     if (this.params.headers.length > 0) {
       const trNode = document.createElement('tr')
-      this.appendHeader(trNode, '')
+      if (this.params.bodyHeader !== 'none') {
+        this.appendHeader(trNode, '')
+      }
       for (let i = 0; i < this.params.headers.length; i ++) {
         this.appendHeader(trNode, this.params.headers[i])
       }
@@ -73,8 +75,12 @@ class EditableTable {
     this.tbodyNode.innerHTML = ''
     for (let y = 0; y < height; y ++) {
       const trNode = document.createElement('tr')
-      this.appendBodyHeader(trNode, y)
-      for (let x = 0; x < this.params.bodies[y].length; x ++) {
+      if (this.params.bodyHeader !== 'none') {
+        const value = this.params.bodyHeader === 'value' ? this.params.bodies[y][0] : y + 1
+        this.appendBodyHeader(trNode, y, value)
+      }
+      const offsetX = this.params.bodyHeader === 'value' ? 1 : 0
+      for (let x = offsetX; x < this.params.bodies[y].length; x ++) {
         const tdNode = document.createElement('td')
         this.updateCell(x, y, tdNode)
         tdNode.setAttribute('data-x', x)
@@ -86,9 +92,9 @@ class EditableTable {
     this.setCursor(0, 0)
   }
 
-  appendBodyHeader (trNode, y) {
+  appendBodyHeader (trNode, y, value) {
     const thNode = document.createElement('th')
-    const textNode = document.createTextNode(y + 1)
+    const textNode = document.createTextNode(value)
     thNode.setAttribute('data-y', y)
     thNode.appendChild(textNode)
     trNode.appendChild(thNode)
@@ -249,10 +255,7 @@ class EditableTable {
     }
 
     this.listboxNode.style['opacity'] = ''
-    selectedItemNode.scrollIntoView({
-      block: 'center',
-      inline: 'center'
-    })
+    this.scrollIntoView(this.listboxNode, selectedItemNode, 0, 0)
   }
 
   onClickListboxItem (index) {
@@ -270,10 +273,7 @@ class EditableTable {
     this.listboxSelectedIndex += adding
     this.listboxSelectedIndex = Math.max(0, Math.min(options.length - 1, this.listboxSelectedIndex))
     this.listboxNode.children[this.listboxSelectedIndex].setAttribute('data-selected', 'true')
-    this.listboxNode.children[this.listboxSelectedIndex].scrollIntoView({
-      block: 'center',
-      inline: 'center'
-    })
+    this.scrollIntoView(this.listboxNode, this.listboxNode.children[this.listboxSelectedIndex], 0, 0)
   }
 
   updateListboxToCell (x, y) {
@@ -463,14 +463,35 @@ class EditableTable {
       if (cell) {
         cell.setAttribute('data-cursor', 'true')
         if (enableScroll) {
-          cell.scrollIntoView({
-            block: 'center',
-            inline: 'center'
-          })
+          const bodyHeaderNode = this.tbodyNode.querySelector('tr th')
+          const offsetLeft = bodyHeaderNode !== null ? bodyHeaderNode.clientWidth : 0
+          const offsetTop = this.theadNode.clientHeight
+          this.scrollIntoView(this.containerNode, cell, offsetLeft, offsetTop)
         }
         this.cursor.x = x
         this.cursor.y = y
       }
+    }
+  }
+
+  scrollIntoView (scrollNode, targetNode, offsetLeft = 0, offsetTop = 0) {
+    const scrollLeft = scrollNode.scrollLeft
+    const scrollWidth = scrollNode.clientWidth
+    const targetLeft = targetNode.offsetLeft
+    const targetWidth = targetNode.clientWidth
+    const scrollTop = scrollNode.scrollTop
+    const scrollHeight = scrollNode.clientHeight
+    const targetTop = targetNode.offsetTop
+    const targetHeight = targetNode.clientHeight
+    if (scrollLeft > targetLeft - offsetLeft) {
+      scrollNode.scrollLeft = targetLeft - offsetLeft
+    } else if (scrollLeft + scrollWidth < targetLeft + targetWidth) {
+      scrollNode.scrollLeft = targetLeft + targetWidth - scrollWidth
+    }
+    if (scrollTop > targetTop - offsetTop) {
+      scrollNode.scrollTop = targetTop - offsetTop
+    } else if (scrollTop + scrollHeight < targetTop + targetHeight) {
+      scrollNode.scrollTop = targetTop + targetHeight - scrollHeight
     }
   }
 
@@ -491,7 +512,8 @@ class EditableTable {
   }
 
   setCursorToLeftEnd () {
-    this.setCursor(0, this.cursor.y)
+    const offsetX = this.params.bodyHeader === 'value' ? 1 : 0
+    this.setCursor(offsetX, this.cursor.y)
   }
 
   setCursorToRightEnd () {
@@ -507,7 +529,8 @@ class EditableTable {
   }
 
   isCursorValid (x, y) {
-    return x >= 0 && y >= 0 && x < this.getWidth() && y < this.getHeight()
+    const offsetX = this.params.bodyHeader === 'value' ? 1 : 0
+    return x >= offsetX && y >= 0 && x < this.getWidth() && y < this.getHeight()
   }
 
   getWidth () {
@@ -533,7 +556,7 @@ class EditableTable {
   }
 
   onDoubleClick (event) {
-    if (this.focus === FocusType.Table) {
+    if (this.focus === FocusType.Table && event.target.closest('td')) {
       this.edit(this.cursor.x, this.cursor.y, false)
     }
   }
