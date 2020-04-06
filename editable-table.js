@@ -10,6 +10,7 @@ class EditableTable {
     this.params.headers = this.params.headers || []
     this.params.bodies = this.params.bodies || []
     this.params.forceConversion = !!this.params.forceConversion
+    this.params.listboxMargin = this.params.listboxMargin == null ? 0 : this.params.listboxMargin
     this.focus = !!this.params.focus ? FocusType.Table : FocusType.None
     this.regulations = []
     this.containerNode = null
@@ -212,8 +213,14 @@ class EditableTable {
   }
 
   openListbox (targetNode, options) {
-    let selectedItemNode = null
+    let selectedItemNode = this.updateListboxChildren(options)
+    this.adjustListboxIntoView(targetNode)
+    this.scrollIntoView(this.listboxNode, selectedItemNode, 0, 0)
     this.setFocus(FocusType.Listbox)
+  }
+
+  updateListboxChildren (options) {
+    let selectedItemNode = null
     this.listboxNode.innerHTML = ''
     for (let i = 0; i < options.length; i ++) {
       const itemNode = document.createElement('li')
@@ -228,34 +235,7 @@ class EditableTable {
       itemNode.appendChild(textNode)
       this.listboxNode.appendChild(itemNode)
     }
-    this.listboxNode.style['max-height'] = ''
-    this.listboxNode.style['opacity'] = '0'
-    this.listboxNode.style['display'] = ''
-
-    // TODO: ポジショニングを改善する
-    const box = targetNode.getBoundingClientRect()
-    const margin = 16
-    let left = box.left - 1
-    let top = 0
-    let maxHeight = - 1
-    if (this.listboxNode.clientHeight < document.documentElement.clientHeight) {
-      if (this.listboxNode.clientHeight + (targetNode.offsetTop - this.containerNode.scrollTop) < document.documentElement.clientHeight) {
-        top = box.top - 1
-      } else {
-        top = document.documentElement.clientHeight - this.listboxNode.clientHeight - margin
-      }
-    } else {
-      top = margin
-      maxHeight = document.documentElement.clientHeight - margin * 2
-    }
-    this.listboxNode.style['left'] = `${left}px`
-    this.listboxNode.style['top'] = `${top}px`
-    if (maxHeight !== - 1) {
-      this.listboxNode.style['max-height'] = `${maxHeight}px`
-    }
-
-    this.listboxNode.style['opacity'] = ''
-    this.scrollIntoView(this.listboxNode, selectedItemNode, 0, 0)
+    return selectedItemNode
   }
 
   onClickListboxItem (index) {
@@ -281,6 +261,19 @@ class EditableTable {
     const value = regulation.options[this.listboxSelectedIndex]
     this.params.bodies[y][x] = value
     this.updateCell(x, y)
+  }
+
+  adjustListboxIntoView (targetNode) {
+    this.listboxNode.style['opacity'] = '0'
+    this.listboxNode.style['display'] = ''
+    this.listboxNode.style['max-height'] = ''
+    let { left, top } = targetNode.getBoundingClientRect()
+    const maxHeight = Math.min(this.listboxNode.clientHeight, document.documentElement.clientHeight) - this.params.listboxMargin * 2
+    top -= Math.abs(Math.min(document.documentElement.clientHeight - (top + maxHeight + this.params.listboxMargin), 0))
+    this.listboxNode.style['left'] = `${left}px`
+    this.listboxNode.style['top'] = `${top}px`
+    this.listboxNode.style['max-height'] = `${maxHeight}px`
+    this.listboxNode.style['opacity'] = ''
   }
 
   setCellRegulation (x, y, params) {
@@ -323,7 +316,9 @@ class EditableTable {
           break
         }
       }
-      this.openListbox(node, regulation.options)
+      if (regulation.options.length > 0) {
+        this.openListbox(node, regulation.options)
+      }
     } else if (type === 'boolean') {
       this.params.bodies[y][x] = !this.params.bodies[y][x]
       this.updateCell(x, y)
@@ -475,23 +470,25 @@ class EditableTable {
   }
 
   scrollIntoView (scrollNode, targetNode, offsetLeft = 0, offsetTop = 0) {
-    const scrollLeft = scrollNode.scrollLeft
-    const scrollWidth = scrollNode.clientWidth
-    const targetLeft = targetNode.offsetLeft
-    const targetWidth = targetNode.clientWidth
-    const scrollTop = scrollNode.scrollTop
-    const scrollHeight = scrollNode.clientHeight
-    const targetTop = targetNode.offsetTop
-    const targetHeight = targetNode.clientHeight
-    if (scrollLeft > targetLeft - offsetLeft) {
-      scrollNode.scrollLeft = targetLeft - offsetLeft
-    } else if (scrollLeft + scrollWidth < targetLeft + targetWidth) {
-      scrollNode.scrollLeft = targetLeft + targetWidth - scrollWidth
-    }
-    if (scrollTop > targetTop - offsetTop) {
-      scrollNode.scrollTop = targetTop - offsetTop
-    } else if (scrollTop + scrollHeight < targetTop + targetHeight) {
-      scrollNode.scrollTop = targetTop + targetHeight - scrollHeight
+    if (scrollNode != null && targetNode != null) {
+      const scrollLeft = scrollNode.scrollLeft
+      const scrollWidth = scrollNode.clientWidth
+      const targetLeft = targetNode.offsetLeft
+      const targetWidth = targetNode.clientWidth
+      const scrollTop = scrollNode.scrollTop
+      const scrollHeight = scrollNode.clientHeight
+      const targetTop = targetNode.offsetTop
+      const targetHeight = targetNode.clientHeight
+      if (scrollLeft > targetLeft - offsetLeft) {
+        scrollNode.scrollLeft = targetLeft - offsetLeft
+      } else if (scrollLeft + scrollWidth < targetLeft + targetWidth) {
+        scrollNode.scrollLeft = targetLeft + targetWidth - scrollWidth
+      }
+      if (scrollTop > targetTop - offsetTop) {
+        scrollNode.scrollTop = targetTop - offsetTop
+      } else if (scrollTop + scrollHeight < targetTop + targetHeight) {
+        scrollNode.scrollTop = targetTop + targetHeight - scrollHeight
+      }
     }
   }
 
