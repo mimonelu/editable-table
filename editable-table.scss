@@ -65,10 +65,13 @@ $accent-color: #0080f0;
         background-clip: padding-box;
       }
     }
-    thead th {
-      top: 0;
-      z-index: 2;
-      &:first-child {
+    thead {
+      th {
+        // top: 0;
+        z-index: 2;
+      }
+
+      tr:first-child th:first-child {
         left: 0;
         z-index: 3;
       }
@@ -186,7 +189,7 @@ $accent-color: #0080f0;
         content: "▼";
         opacity: 0.125;
         position: absolute;
-        top: 0.5rem;
+        top: calc(50% - 0.5rem);
         right: 0.5rem;
       }
     }

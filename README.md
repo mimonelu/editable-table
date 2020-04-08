@@ -1,5 +1,5 @@
 # editable-table-js (WIP)
-Easy, simple, cheap library that generates spreadsheet-like tables.
+Easy, simple, cheap library that generates spreadsheet-like tables.  
 __This library is completely under development. Please don't use it.__
 * Demo: https://mimonelu.github.io/editable-table/
 * GitHub: https://github.com/mimonelu/editable-table

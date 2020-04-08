@@ -53,14 +53,21 @@ class EditableTable {
   updateHeaders () {
     this.theadNode.innerHTML = ''
     if (this.params.headers.length > 0) {
-      const trNode = document.createElement('tr')
-      if (this.params.bodyHeader !== 'none') {
-        this.appendHeader(trNode, '')
+      let leftTopNode = null
+      for (let y = 0; y < this.params.headers.length; y ++) {
+        const trNode = document.createElement('tr')
+        if (y === 0 && this.params.bodyHeader !== 'none') {
+          leftTopNode = this.appendHeader(trNode, '')
+        }
+        for (let x = 0; x < this.params.headers[y].length; x ++) {
+          this.appendHeader(trNode, this.params.headers[y][x])
+        }
+        this.theadNode.appendChild(trNode)
       }
-      for (let i = 0; i < this.params.headers.length; i ++) {
-        this.appendHeader(trNode, this.params.headers[i])
+      if (leftTopNode !== null) {
+        leftTopNode.setAttribute('rowspan', '2')
       }
-      this.theadNode.appendChild(trNode)
+      this.updateHeaderPositions()
     }
   }
 
@@ -69,6 +76,23 @@ class EditableTable {
     const textNode = document.createTextNode(text)
     thNode.appendChild(textNode)
     trNode.appendChild(thNode)
+    return thNode
+  }
+
+  updateHeaderPositions () {
+    let top = 0
+    const trNodes = this.theadNode.children
+    for (let y = 0; y < trNodes.length; y ++) {
+      const thNodes = trNodes[y].children
+      for (let x = 0; x < thNodes.length; x ++) {
+        thNodes[x].style['top'] = `${top}px`
+      }
+      top += trNodes[y].clientHeight
+    }
+  }
+
+  setHeaderAttribute (x, y, name, value) {
+    this.theadNode.children[y].children[x + 1].setAttribute(name, value)
   }
 
   updateBodies () {
@@ -150,47 +174,6 @@ class EditableTable {
         callback(x, y)
       }
     }
-  }
-
-  setSampleData (rowNumber, columnNumber) {
-    const options = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ]
-    this.params.headers.splice(0)
-    for (let i = 0; i < columnNumber; i ++) {
-      const value = String.fromCharCode(65 + i)
-      this.params.headers.push(value)
-    }
-    this.params.bodies.splice(0)
-    for (let y = 0; y < rowNumber; y ++) {
-      this.params.bodies[y] = []
-      for (let x = 0; x < columnNumber; x ++) {
-        const value = (x % 5) === 0 ? (Math.random() >= 0.5) :
-          (x % 5) === 1 ? (Math.floor(Math.random() * 201) - 100) :
-          (x % 5) === 2 ? (String.fromCharCode(65 + x) + y) :
-          (x % 5) === 3 ? options[Math.floor(Math.random() * options.length)] :
-          'Button'
-        this.params.bodies[y].push(value)
-      }
-    }
-    this.resetRegulations()
-    for (let y = 0; y < rowNumber; y ++) {
-      for (let x = 0; x < columnNumber; x ++) {
-        if ((x % 5) === 3) {
-          this.setCellRegulation(x, y, {
-            type: 'select',
-            options
-          })
-        } else if ((x % 5) === 4) {
-          this.setCellRegulation(x, y, {
-            type: 'button',
-            callback: (x, y) => {
-              alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
-            }
-          })
-        }
-      }
-    }
-    this.updateHeaders()
-    this.updateBodies()
   }
 
   resetRegulations () {
