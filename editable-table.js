@@ -7,11 +7,7 @@ const FocusType = {
 class EditableTable {
   constructor (params) {
     this.params = params
-    this.params.headers = this.params.headers || []
-    this.params.bodies = this.params.bodies || []
-    this.params.forceConversion = !!this.params.forceConversion
-    this.params.listboxMargin = this.params.listboxMargin == null ? 0 : this.params.listboxMargin
-    this.focus = !!this.params.focus ? FocusType.Table : FocusType.None
+    this.focus = !!this.params.autofocus ? FocusType.Table : FocusType.None
     this.regulations = []
     this.containerNode = null
     this.tableNode = null
@@ -19,18 +15,14 @@ class EditableTable {
     this.tbodyNode = null
     this.cursor = { x: 0, y: 0 }
     this.isInputting = false
+    this.clipboard = { type: null, regulation: null, value: null }
     this.listboxNode = null
     this.listboxSelectedIndex = 0
-    this.clipboard = {
-      type: null,
-      regulation: null,
-      value: null,
-    }
-    this.appendTable()
+    this.setupTable()
     this.setupLlistbox()
   }
 
-  appendTable () {
+  setupTable () {
     this.containerNode = document.createElement('div')
     this.tableNode = document.createElement('table')
     this.theadNode = document.createElement('thead')
@@ -38,11 +30,13 @@ class EditableTable {
     this.containerNode.setAttribute('class', 'editable-table__container')
     this.resetRegulations()
     this.updateHeaders()
+    this.setHeaderSpans(this.params.headerSpans)
     this.updateBodies()
     this.tableNode.appendChild(this.theadNode)
     this.tableNode.appendChild(this.tbodyNode)
     this.containerNode.appendChild(this.tableNode)
     this.params.containerNode.appendChild(this.containerNode)
+    this.updateHeaderPositions()
     this.setFocus(this.focus)
     window.addEventListener('click', this.onClick.bind(this), false)
     window.addEventListener('dblclick', this.onDoubleClick.bind(this), false)
@@ -52,11 +46,11 @@ class EditableTable {
 
   updateHeaders () {
     this.theadNode.innerHTML = ''
-    if (this.params.headers.length > 0) {
+    if (this.params.headers != null && this.params.headers.length > 0) {
       let leftTopNode = null
       for (let y = 0; y < this.params.headers.length; y ++) {
         const trNode = document.createElement('tr')
-        if (y === 0 && this.params.bodyHeader !== 'none') {
+        if (y === 0 && this.params.bodyHeaderType !== 'none') {
           leftTopNode = this.appendHeader(trNode, '')
         }
         for (let x = 0; x < this.params.headers[y].length; x ++) {
@@ -67,7 +61,6 @@ class EditableTable {
       if (leftTopNode !== null) {
         leftTopNode.setAttribute('rowspan', '2')
       }
-      this.updateHeaderPositions()
     }
   }
 
@@ -91,8 +84,25 @@ class EditableTable {
     }
   }
 
+  setHeaderSpans (spans) {
+    if (spans != null && this.params.headers != null) {
+      for (let y = 0; y < this.params.headers.length; y ++) {
+        for (let x = 0; x < this.params.headers[y].length; x ++) {
+          if (spans[y] != null && spans[y][x] != null) {
+            if (spans[y][x].x != null) {
+              this.setHeaderAttribute(x, y, 'colspan', spans[y][x].x)
+            }
+            if (spans[y][x].y != null) {
+              this.setHeaderAttribute(x, y, 'rowspan', spans[y][x].y)
+            }
+          }
+        }
+      }
+    }
+  }
+
   setHeaderAttribute (x, y, name, value) {
-    this.theadNode.children[y].children[x + 1].setAttribute(name, value)
+    this.theadNode.children[y].children[x + (this.params.bodyHeaderType !== 'none' ? 1 : 0)].setAttribute(name, value)
   }
 
   updateBodies () {
@@ -100,11 +110,11 @@ class EditableTable {
     this.tbodyNode.innerHTML = ''
     for (let y = 0; y < height; y ++) {
       const trNode = document.createElement('tr')
-      if (this.params.bodyHeader !== 'none') {
-        const value = this.params.bodyHeader === 'value' ? this.params.bodies[y][0] : y + 1
+      if (this.params.bodyHeaderType !== 'none') {
+        const value = this.params.bodyHeaderType === 'value' ? this.params.bodies[y][0] : y + 1
         this.appendBodyHeader(trNode, y, value)
       }
-      const offsetX = this.params.bodyHeader === 'value' ? 1 : 0
+      const offsetX = this.params.bodyHeaderType === 'value' ? 1 : 0
       for (let x = offsetX; x < this.params.bodies[y].length; x ++) {
         const tdNode = document.createElement('td')
         this.updateCell(x, y, tdNode)
@@ -157,12 +167,8 @@ class EditableTable {
   setCell (x, y, value) {
     const node = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
     const type = node.getAttribute('data-type')
-    if (this.params.forceConversion) {
-      const v = type === 'boolean' ? Boolean(value) : type === 'number' ? (value === '' ? null : Number(value)) : value
-      this.params.bodies[y][x] = v
-    } else {
-      this.params.bodies[y][x] = value
-    }
+    const v = type === 'boolean' ? Boolean(value) : type === 'number' ? (value === '' ? null : Number(value)) : value
+    this.params.bodies[y][x] = v
     this.updateCell(x, y, node)
   }
 
@@ -251,8 +257,8 @@ class EditableTable {
     this.listboxNode.style['display'] = ''
     this.listboxNode.style['max-height'] = ''
     let { left, top } = targetNode.getBoundingClientRect()
-    const maxHeight = Math.min(this.listboxNode.clientHeight, document.documentElement.clientHeight) - this.params.listboxMargin * 2
-    top -= Math.abs(Math.min(document.documentElement.clientHeight - (top + maxHeight + this.params.listboxMargin), 0))
+    const maxHeight = Math.min(this.listboxNode.clientHeight, document.documentElement.clientHeight) - (this.params.listboxMargin || 0) * 2
+    top -= Math.abs(Math.min(document.documentElement.clientHeight - (top + maxHeight + (this.params.listboxMargin || 0)), 0))
     this.listboxNode.style['left'] = `${left}px`
     this.listboxNode.style['top'] = `${top}px`
     this.listboxNode.style['max-height'] = `${maxHeight}px`
@@ -492,7 +498,7 @@ class EditableTable {
   }
 
   setCursorToLeftEnd () {
-    const offsetX = this.params.bodyHeader === 'value' ? 1 : 0
+    const offsetX = this.params.bodyHeaderType === 'value' ? 1 : 0
     this.setCursor(offsetX, this.cursor.y)
   }
 
@@ -509,16 +515,16 @@ class EditableTable {
   }
 
   isCursorValid (x, y) {
-    const offsetX = this.params.bodyHeader === 'value' ? 1 : 0
+    const offsetX = this.params.bodyHeaderType === 'value' ? 1 : 0
     return x >= offsetX && y >= 0 && x < this.getWidth() && y < this.getHeight()
   }
 
   getWidth () {
-    return this.params.bodies.length > 0 ? this.params.bodies[0].length : 0
+    return this.params.bodies == null ? 0 : (this.params.bodies.length > 0 ? this.params.bodies[0].length : 0)
   }
 
   getHeight () {
-    return this.params.bodies.length
+    return this.params.bodies == null ? 0 : this.params.bodies.length
   }
 
   onClick (event) {
@@ -544,95 +550,105 @@ class EditableTable {
   onKeyDown (event) {
     const keyCode = event.code || event.key
     if (this.focus === FocusType.Table) {
-      const type = typeof this.params.bodies[this.cursor.y][this.cursor.x]
-      const regulation = this.regulations[this.cursor.y][this.cursor.x]
-      switch (keyCode) {
-        case 'ArrowLeft': {
-          event.preventDefault()
-          // TODO: `ctrlKey` + `ArrowLeft` を機能させる
-          if (event.ctrlKey || event.metaKey) {
-            this.setCursorToLeftEnd()
-          } else {
-            this.setCursorToLeft()
-          }
-          break
-        }
-        case 'ArrowRight': {
-          event.preventDefault()
-          // TODO: `ctrlKey` + `ArrowRight` を機能させる
-          if (event.ctrlKey || event.metaKey) {
-            this.setCursorToRightEnd()
-          } else {
-            this.setCursorToRight()
-          }
-          break
-        }
-        case 'ArrowUp': {
-          event.preventDefault()
-          if (event.ctrlKey || event.metaKey) {
-            this.setCursorToTop()
-          } else {
-            this.setCursorToUp()
-          }
-          break
-        }
-        case 'ArrowDown': {
-          event.preventDefault()
-          if (event.ctrlKey || event.metaKey) {
-            this.setCursorToBottom()
-          } else {
-            this.setCursorToDown()
-          }
-          break
-        }
-        case 'Tab': {
-          event.preventDefault()
-          if (event.shiftKey) {
-            this.setCursorToLeft()
-          } else {
-            this.setCursorToRight()
-          }
-          break
-        }
-        case ' ':
-        case 'Space': {
-          event.preventDefault()
-          this.edit(this.cursor.x, this.cursor.y, type !== 'boolean')
-          break
-        }
-        case 'Backspace': {
-          event.preventDefault()
-          if ((type === 'boolean' || type === 'number' || type === 'string') && (regulation.type !== 'button' && regulation.type !== 'select')) {
-            this.setCell(this.cursor.x, this.cursor.y, '')
-          }
-          break
-        }
-        case 'Escape': {
-          event.preventDefault()
-          this.setFocus(FocusType.None)
-          break
-        }
-        case 'KeyC': {
-          if (event.ctrlKey || event.metaKey) {
+      if (this.isCursorValid(this.cursor.x, this.cursor.y)) {
+        const type = typeof this.params.bodies[this.cursor.y][this.cursor.x]
+        const regulation = this.regulations[this.cursor.y][this.cursor.x]
+        switch (keyCode) {
+          case 'ArrowLeft': {
             event.preventDefault()
-            this.copyCell(this.cursor.x, this.cursor.y, type, regulation)
-          } else {
-            this.onEtceteraKeyDown(type, regulation, event)
+            // TODO: `ctrlKey` + `ArrowLeft` を機能させる
+            if (event.ctrlKey || event.metaKey) {
+              this.setCursorToLeftEnd()
+            } else {
+              this.setCursorToLeft()
+            }
+            break
           }
-          break
-        }
-        case 'KeyV': {
-          if (event.ctrlKey || event.metaKey) {
+          case 'ArrowRight': {
             event.preventDefault()
-            this.pasteCell(this.cursor.x, this.cursor.y, type, regulation)
-          } else {
-            this.onEtceteraKeyDown(type, regulation, event)
+            // TODO: `ctrlKey` + `ArrowRight` を機能させる
+            if (event.ctrlKey || event.metaKey) {
+              this.setCursorToRightEnd()
+            } else {
+              this.setCursorToRight()
+            }
+            break
           }
-          break
+          case 'ArrowUp': {
+            event.preventDefault()
+            if (event.ctrlKey || event.metaKey) {
+              this.setCursorToTop()
+            } else {
+              this.setCursorToUp()
+            }
+            break
+          }
+          case 'ArrowDown': {
+            event.preventDefault()
+            if (event.ctrlKey || event.metaKey) {
+              this.setCursorToBottom()
+            } else {
+              this.setCursorToDown()
+            }
+            break
+          }
+          case 'Tab': {
+            event.preventDefault()
+            if (event.shiftKey) {
+              this.setCursorToLeft()
+            } else {
+              this.setCursorToRight()
+            }
+            break
+          }
+          case ' ':
+          case 'Space': {
+            event.preventDefault()
+            this.edit(this.cursor.x, this.cursor.y, type !== 'boolean')
+            break
+          }
+          case 'Backspace': {
+            event.preventDefault()
+            if ((type === 'boolean' || type === 'number' || type === 'string') && (regulation.type !== 'button' && regulation.type !== 'select')) {
+              this.setCell(this.cursor.x, this.cursor.y, '')
+            }
+            break
+          }
+          case 'Escape': {
+            event.preventDefault()
+            this.setFocus(FocusType.None)
+            break
+          }
+          case 'KeyC': {
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault()
+              this.copyCell(this.cursor.x, this.cursor.y, type, regulation)
+            } else {
+              this.onEtceteraKeyDown(type, regulation, event)
+            }
+            break
+          }
+          case 'KeyV': {
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault()
+              this.pasteCell(this.cursor.x, this.cursor.y, type, regulation)
+            } else {
+              this.onEtceteraKeyDown(type, regulation, event)
+            }
+            break
+          }
+          default: {
+            this.onEtceteraKeyDown(type, regulation, event)
+            break
+          }
         }
-        default: {
-          this.onEtceteraKeyDown(type, regulation, event)
-          break
+      } else {
+        switch (keyCode) {
+          case 'Escape': {
+            event.preventDefault()
+            this.setFocus(FocusType.None)
+            break
+          }
         }
       }
     } else if (this.focus === FocusType.Listbox) {

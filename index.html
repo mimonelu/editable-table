@@ -3,6 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge; chrome=1">
+    <title>editable-table-js</title>
+    <link href="./dist/editable-table.css" rel="stylesheet">
     <style>
 
 html {
@@ -32,11 +34,10 @@ small {
 }
 
     </style>
-    <link href="./dist/editable-table.css" rel="stylesheet">
   </head>
   <body>
     <header class="mb1">
-      <h1 class="mb1">editable-table-js 1.0.12 (WIP)</h1>
+      <h1 class="mb1">editable-table-js 1.0.13 (WIP)</h1>
       <a href="https://github.com/mimonelu/editable-table">GitHub</a> | <a href="https://www.npmjs.com/package/editable-table-js">npm</a>
     </header>
     <div class="container mb1"></div>
@@ -46,26 +47,16 @@ small {
     <script src="./dist/editable-table.js"></script>
     <script>
 
-const options = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
+const options = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ]
 
 const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   headers: [
     [ 'Primitives', 'Regulations' ],
     [ 'Boolean', 'Number', 'String', 'Select Regulation', 'Button Regulation' ],
+  ],
+  headerSpans: [
+    [ { x: 3 }, { x: 2 } ],
   ],
   bodies: [ ...Array(64).keys() ].map((n) => [
     Math.random() >= 0.5,
@@ -74,15 +65,10 @@ const editableTable = new EditableTable({
     options[Math.floor(Math.random() * options.length)],
     'Button',
   ]),
-  focus: true,
-  forceConversion: true,
-  // bodyHeader: 'value', // 'none' | 'value' | etc (line number)
+  autofocus: true,
+  bodyHeaderType: 'line', // 'none' | 'value' | etc (line number)
   listboxMargin: 16,
 })
-
-editableTable.updateHeaders()
-editableTable.setHeaderAttribute(0, 0, 'colspan', '3')
-editableTable.setHeaderAttribute(1, 0, 'colspan', '2')
 
 editableTable.resetRegulations()
 for (let y = 0; y < editableTable.getHeight(); y ++) {
