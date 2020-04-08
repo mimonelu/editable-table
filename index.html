@@ -65,30 +65,15 @@ const editableTable = new EditableTable({
     options[Math.floor(Math.random() * options.length)],
     'Button',
   ]),
+  columnRegulations: [
+    null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
+      alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
+    }}
+  ],
   autofocus: true,
   bodyHeaderType: 'line', // 'none' | 'value' | etc (line number)
   listboxMargin: 16,
 })
-
-editableTable.resetRegulations()
-for (let y = 0; y < editableTable.getHeight(); y ++) {
-  for (let x = 0; x < editableTable.getWidth(); x ++) {
-    if (x === 3) {
-      editableTable.setCellRegulation(x, y, {
-        type: 'select',
-        options,
-      })
-    } else if (x === 4) {
-      editableTable.setCellRegulation(x, y, {
-        type: 'button',
-        callback: (x, y) => {
-          alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
-        }
-      })
-    }
-  }
-}
-editableTable.updateBodies()
 
     </script>
   </body>

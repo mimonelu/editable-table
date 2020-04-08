@@ -8,6 +8,7 @@ class EditableTable {
   constructor (params) {
     this.params = params
     this.focus = !!this.params.autofocus ? FocusType.Table : FocusType.None
+    this.columnRegulations = []
     this.regulations = []
     this.containerNode = null
     this.tableNode = null
@@ -28,6 +29,7 @@ class EditableTable {
     this.theadNode = document.createElement('thead')
     this.tbodyNode = document.createElement('tbody')
     this.containerNode.setAttribute('class', 'editable-table__container')
+    this.setColumnRegulations(this.params.columnRegulations)
     this.resetRegulations()
     this.updateHeaders()
     this.setHeaderSpans(this.params.headerSpans)
@@ -141,7 +143,7 @@ class EditableTable {
     }
     if (tdNode) {
       const type = this.params.bodies[y][x] == null ? 'number' : typeof this.params.bodies[y][x]
-      const regulation = this.regulations[y][x]
+      const regulation = this.regulations[y][x] || this.columnRegulations[x] || {}
       tdNode.setAttribute('data-type', type)
       tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
       tdNode.setAttribute('data-regulation', regulation.type || '')
@@ -189,7 +191,7 @@ class EditableTable {
     for (let y = 0; y < yLength; y ++) {
       this.regulations[y] = []
       for (let x = 0; x < xLength; x ++) {
-        this.regulations[y][x] = []
+        this.regulations[y][x] = null
       }
     }
   }
@@ -246,7 +248,7 @@ class EditableTable {
   }
 
   updateListboxToCell (x, y) {
-    const regulation = this.regulations[y][x]
+    const regulation = this.regulations[y][x] || this.columnRegulations[x] || {}
     const value = regulation.options[this.listboxSelectedIndex]
     this.params.bodies[y][x] = value
     this.updateCell(x, y)
@@ -265,13 +267,17 @@ class EditableTable {
     this.listboxNode.style['opacity'] = ''
   }
 
-  setCellRegulation (x, y, params) {
-    this.regulations[y][x].type = params.type
-    if (params.callback != null) {
-      this.regulations[y][x].callback = params.callback
+  setColumnRegulations (regulations) {
+    this.columnRegulations = []
+    for (let i = 0; i < regulations.length; i ++) {
+      this.columnRegulations[i] = regulations[i]
     }
-    if (params.options != null) {
-      this.regulations[y][x].options = params.options
+  }
+
+  setCellRegulation (x, y, regulation) {
+    this.regulations[y][x] = {}
+    for (let key in regulation) {
+      this.regulations[y][x][key] = regulation[key]
     }
   }
 
@@ -294,7 +300,7 @@ class EditableTable {
       return
     }
     const type = node.getAttribute('data-type')
-    const regulation = this.regulations[y][x]
+    const regulation = this.regulations[y][x] || this.columnRegulations[x] || {}
     if (regulation.type === 'button') {
       regulation.callback(x, y)
     } else if (regulation.type === 'select') {
@@ -552,7 +558,7 @@ class EditableTable {
     if (this.focus === FocusType.Table) {
       if (this.isCursorValid(this.cursor.x, this.cursor.y)) {
         const type = typeof this.params.bodies[this.cursor.y][this.cursor.x]
-        const regulation = this.regulations[this.cursor.y][this.cursor.x]
+        const regulation = this.regulations[this.cursor.y][this.cursor.x] || this.columnRegulations[this.cursor.x] || {}
         switch (keyCode) {
           case 'ArrowLeft': {
             event.preventDefault()
@@ -652,7 +658,7 @@ class EditableTable {
         }
       }
     } else if (this.focus === FocusType.Listbox) {
-      const regulation = this.regulations[this.cursor.y][this.cursor.x]
+      const regulation = this.regulations[this.cursor.y][this.cursor.x] || this.columnRegulations[this.cursor.x] || {}
       switch (keyCode) {
         case 'ArrowUp': {
           event.preventDefault()
