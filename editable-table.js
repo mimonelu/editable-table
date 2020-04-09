@@ -44,6 +44,7 @@ class EditableTable {
     window.addEventListener('dblclick', this.onDoubleClick.bind(this), false)
     window.addEventListener('keydown', this.onKeyDown.bind(this), false)
     window.addEventListener('keyup', this.onKeyUp.bind(this), false)
+    window.addEventListener('resize', this.onResize.bind(this), false)
   }
 
   updateHeaders () {
@@ -82,7 +83,9 @@ class EditableTable {
       for (let x = 0; x < thNodes.length; x ++) {
         thNodes[x].style['top'] = `${top}px`
       }
-      top += trNodes[y].clientHeight
+      if (y < trNodes.length - 1) {
+        top += trNodes[y].clientHeight
+      }
     }
   }
 
@@ -750,6 +753,10 @@ class EditableTable {
       this.params.bodies[y][x] = this.clipboard.value
       this.updateCell(x, y)
     }
+  }
+
+  onResize () {
+    this.updateHeaderPositions()
   }
 }
 
