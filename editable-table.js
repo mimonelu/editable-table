@@ -1,63 +1,298 @@
-const FocusType = {
-  None: 0,
-  Table: 1,
-  Listbox: 2
-}
+const BuiltinRegulations = [
+  {
+    type: 'button',
+
+    onEdit (instance, regulation, x, y, tdNode) {
+      if (regulation.callback != null) {
+        regulation.callback(x, y)
+      }
+      return false
+    },
+
+    onUpdateCell (instance, regulation, x, y, tdNode) {
+      const buttonNode = document.createElement('div')
+      const textNode = document.createTextNode(instance.params.bodies[y][x])
+      buttonNode.addEventListener('click', () => {
+        instance.setCursor(x, y, false)
+        if (regulation.callback != null) {
+          regulation.callback(x, y)
+        }
+      }, false)
+      buttonNode.appendChild(textNode)
+      tdNode.appendChild(buttonNode)
+      return false
+    }
+  },
+  {
+    type: 'select',
+
+    onSetup (instance) {
+      this.listboxNode = null
+      this.listboxSelectedIndex = 0
+      this.setupLlistbox(instance)
+    },
+
+    onClick (instance, regulation, targetNode) {
+      if (!targetNode.closest('.editable-table__listbox')) {
+        this.closeListbox(instance)
+      }
+    },
+
+    onEdit (instance, regulation, x, y, tdNode) {
+      this.listboxSelectedIndex = 0
+      for (let i = 0; i < regulation.options.length; i ++) {
+        if (regulation.options[i] === instance.params.bodies[y][x]) {
+          this.listboxSelectedIndex = i
+          break
+        }
+      }
+      if (regulation.options.length > 0) {
+        this.openListbox(instance, tdNode, regulation.options)
+      }
+      return false
+    },
+
+    onKeyDown (instance, regulation, keyCode) {
+      if (instance.focusType === 'Listbox') {
+        const regulation = instance.cellRegulations[instance.cursor.y][instance.cursor.x] || instance.columnRegulations[instance.cursor.x] || {}
+        switch (keyCode) {
+          case 'ArrowUp': {
+            event.preventDefault()
+            this.addListboxSelectedIndex(instance, - 1, regulation.options)
+            break
+          }
+          case 'ArrowDown': {
+            event.preventDefault()
+            this.addListboxSelectedIndex(instance, 1, regulation.options)
+            break
+          }
+          case 'Tab': {
+            event.preventDefault()
+            this.closeListbox(instance)
+            if (event.shiftKey) {
+              instance.setCursorToLeft()
+            } else {
+              instance.setCursorToRight()
+            }
+            break
+          }
+          case ' ':
+          case 'Space': {
+            event.preventDefault()
+            this.updateListboxToCell(instance, instance.cursor.x, instance.cursor.y)
+            this.closeListbox(instance)
+            break
+          }
+          case 'Escape': {
+            this.closeListbox(instance)
+            break
+          }
+        }
+      }
+    },
+
+    onKeyUp (instance, regulation, keyCode) {
+      if (instance.focusType === 'Listbox') {
+        switch (keyCode) {
+          case 'Enter': {
+            this.updateListboxToCell(instance, instance.cursor.x, instance.cursor.y)
+            this.closeListbox(instance)
+            instance.setCursorToDown()
+            break
+          }
+        }
+      }
+    },
+
+    onPasteCell (instance, regulation, x, y) {
+      return regulation.options.indexOf(instance.clipboard.value) !== - 1
+    },
+
+    setupLlistbox (instance) {
+      this.listboxNode = document.createElement('ol')
+      this.listboxNode.setAttribute('class', 'editable-table__listbox')
+      this.listboxNode.style['display'] = 'none'
+      instance.containerNode.appendChild(this.listboxNode)
+    },
+
+    openListbox (instance, targetNode, options) {
+      let selectedItemNode = this.updateListboxChildren(instance, options)
+      this.adjustListboxIntoView(instance, targetNode)
+      instance.scrollIntoView(this.listboxNode, selectedItemNode, 0, 0)
+      instance.setFocus('Listbox')
+    },
+
+    updateListboxChildren (instance, options) {
+      let selectedItemNode = null
+      this.listboxNode.innerHTML = ''
+      for (let i = 0; i < options.length; i ++) {
+        const itemNode = document.createElement('li')
+        const textNode = document.createTextNode(options[i])
+        if (i === this.listboxSelectedIndex) {
+          selectedItemNode = itemNode
+        }
+        itemNode.setAttribute('data-selected', i === this.listboxSelectedIndex)
+        itemNode.addEventListener('click', (event) => {
+          this.listboxSelectedIndex = i
+          this.updateListboxToCell(instance, instance.cursor.x, instance.cursor.y)
+          this.closeListbox(instance)
+        }, false)
+        itemNode.appendChild(textNode)
+        this.listboxNode.appendChild(itemNode)
+      }
+      return selectedItemNode
+    },
+
+    closeListbox (instance) {
+      this.listboxNode.style['display'] = 'none'
+      instance.setFocus('Table')
+    },
+
+    addListboxSelectedIndex (instance, adding, options) {
+      this.listboxNode.children[this.listboxSelectedIndex].setAttribute('data-selected', 'false')
+      this.listboxSelectedIndex += adding
+      this.listboxSelectedIndex = Math.max(0, Math.min(options.length - 1, this.listboxSelectedIndex))
+      this.listboxNode.children[this.listboxSelectedIndex].setAttribute('data-selected', 'true')
+      instance.scrollIntoView(this.listboxNode, this.listboxNode.children[this.listboxSelectedIndex], 0, 0)
+    },
+
+    updateListboxToCell (instance, x, y) {
+      const regulation = instance.cellRegulations[y][x] || instance.columnRegulations[x] || {}
+      const value = regulation.options[this.listboxSelectedIndex]
+      instance.params.bodies[y][x] = value
+      instance.updateCell(x, y)
+    },
+
+    adjustListboxIntoView (instance, targetNode) {
+      this.listboxNode.style['opacity'] = '0'
+      this.listboxNode.style['display'] = ''
+      this.listboxNode.style['max-height'] = ''
+      let { left, top } = targetNode.getBoundingClientRect()
+      const maxHeight = Math.min(this.listboxNode.clientHeight, document.documentElement.clientHeight) - (instance.params.listboxMargin || 0) * 2
+      top -= Math.abs(Math.min(document.documentElement.clientHeight - (top + maxHeight + (instance.params.listboxMargin || 0)), 0))
+      this.listboxNode.style['left'] = `${left}px`
+      this.listboxNode.style['top'] = `${top}px`
+      this.listboxNode.style['max-height'] = `${maxHeight}px`
+      this.listboxNode.style['opacity'] = ''
+    }
+  }
+]
 
 class EditableTable {
   constructor (params) {
     this.params = params
-    this.focus = !!this.params.autofocus ? FocusType.Table : FocusType.None
+    this.setupProperties()
+    this.addRegulations(BuiltinRegulations)
+    this.addRegulations(this.params.regulations)
+    this.setColumnRegulations(this.params.columnRegulations)
+    this.setCellRegulations()
+    this.setupTable()
+    this.setupListeners()
+    this.callRegulation('all', 'onSetup')
+  }
+
+  setupProperties () {
+    this.focusType = !!this.params.autofocus ? 'Table' : 'None'
+    this.regulations = []
     this.columnRegulations = []
     this.cellRegulations = []
     this.containerNode = null
+    this.scrollerNode = null
     this.tableNode = null
     this.theadNode = null
     this.tbodyNode = null
     this.cursor = { x: 0, y: 0 }
     this.isInputting = false
     this.clipboard = { type: null, regulation: null, value: null }
-    this.listboxNode = null
-    this.listboxSelectedIndex = 0
-    this.setupTable()
-    this.setupLlistbox()
   }
 
   setupTable () {
     this.containerNode = document.createElement('div')
+    this.containerNode.setAttribute('class', 'editable-table')
+    this.scrollerNode = document.createElement('div')
+    this.scrollerNode.setAttribute('class', 'editable-table__scroller')
     this.tableNode = document.createElement('table')
     this.theadNode = document.createElement('thead')
     this.tbodyNode = document.createElement('tbody')
-    this.containerNode.setAttribute('class', 'editable-table__container')
-    this.setColumnRegulations(this.params.columnRegulations)
-    this.resetCellRegulations()
-    this.updateHeaders()
+    this.setHeaders(this.params.headers)
     this.setHeaderSpans(this.params.headerSpans)
-    this.updateBodies()
+    this.setBodies(this.params.bodies)
     this.tableNode.appendChild(this.theadNode)
     this.tableNode.appendChild(this.tbodyNode)
-    this.containerNode.appendChild(this.tableNode)
+    this.scrollerNode.appendChild(this.tableNode)
+    this.containerNode.appendChild(this.scrollerNode)
     this.params.containerNode.appendChild(this.containerNode)
     this.updateHeaderPositions()
-    this.setFocus(this.focus)
-    window.addEventListener('click', this.onClick.bind(this), false)
-    window.addEventListener('dblclick', this.onDoubleClick.bind(this), false)
-    window.addEventListener('keydown', this.onKeyDown.bind(this), false)
-    window.addEventListener('keyup', this.onKeyUp.bind(this), false)
-    window.addEventListener('resize', this.onResize.bind(this), false)
+    this.setFocus(this.focusType)
   }
 
-  updateHeaders () {
+  getWidth () {
+    return this.params.bodies == null ? 0 : (this.params.bodies.length > 0 ? this.params.bodies[0].length : 0)
+  }
+
+  getHeight () {
+    return this.params.bodies == null ? 0 : this.params.bodies.length
+  }
+
+  addRegulations (regulations) {
+    if (regulations != null) {
+      for (let i = 0; i < regulations.length; i ++) {
+        this.addRegulation(regulations[i])
+      }
+    }
+  }
+
+  addRegulation (regulation) {
+    this.regulations.push(regulation)
+  }
+
+  setColumnRegulations (regulations) {
+    this.columnRegulations.splice(0)
+    if (regulations != null) {
+      for (let i = 0; i < regulations.length; i ++) {
+        this.columnRegulations[i] = regulations[i]
+      }
+    }
+    const xLength = this.getWidth()
+    for (let x = 0; x < xLength; x ++) {
+      this.columnRegulations[x] = this.columnRegulations[x] || null
+    }
+  }
+
+  setCellRegulations () {
+    this.cellRegulations.splice(0)
+    const xLength = this.getWidth()
+    const yLength = this.getHeight()
+    for (let y = 0; y < yLength; y ++) {
+      this.cellRegulations[y] = []
+      for (let x = 0; x < xLength; x ++) {
+        this.cellRegulations[y][x] = null
+      }
+    }
+  }
+
+  setCellRegulation (x, y, regulation) {
+    if (regulation != null) {
+      this.cellRegulations[y][x] = {}
+      for (let key in regulation) {
+        this.cellRegulations[y][x][key] = regulation[key]
+      }
+    } else {
+      this.cellRegulations[y][x] = null
+    }
+  }
+
+  setHeaders (headers) {
     this.theadNode.innerHTML = ''
-    if (this.params.headers != null && this.params.headers.length > 0) {
+    if (headers != null && headers.length > 0) {
       let leftTopNode = null
-      for (let y = 0; y < this.params.headers.length; y ++) {
+      for (let y = 0; y < headers.length; y ++) {
         const trNode = document.createElement('tr')
         if (y === 0 && this.params.bodyHeaderType !== 'none') {
           leftTopNode = this.appendHeader(trNode, '')
         }
-        for (let x = 0; x < this.params.headers[y].length; x ++) {
-          this.appendHeader(trNode, this.params.headers[y][x])
+        for (let x = 0; x < headers[y].length; x ++) {
+          this.appendHeader(trNode, headers[y][x])
         }
         this.theadNode.appendChild(trNode)
       }
@@ -73,20 +308,6 @@ class EditableTable {
     thNode.appendChild(textNode)
     trNode.appendChild(thNode)
     return thNode
-  }
-
-  updateHeaderPositions () {
-    let top = 0
-    const trNodes = this.theadNode.children
-    for (let y = 0; y < trNodes.length; y ++) {
-      const thNodes = trNodes[y].children
-      for (let x = 0; x < thNodes.length; x ++) {
-        thNodes[x].style['top'] = `${top}px`
-      }
-      if (y < trNodes.length - 1) {
-        top += trNodes[y].clientHeight
-      }
-    }
   }
 
   setHeaderSpans (spans) {
@@ -110,17 +331,31 @@ class EditableTable {
     this.theadNode.children[y].children[x + (this.params.bodyHeaderType !== 'none' ? 1 : 0)].setAttribute(name, value)
   }
 
-  updateBodies () {
+  updateHeaderPositions () {
+    let top = 0
+    const trNodes = this.theadNode.children
+    for (let y = 0; y < trNodes.length; y ++) {
+      const thNodes = trNodes[y].children
+      for (let x = 0; x < thNodes.length; x ++) {
+        thNodes[x].style['top'] = `${top}px`
+      }
+      if (y < trNodes.length - 1) {
+        top += trNodes[y].clientHeight
+      }
+    }
+  }
+
+  setBodies (bodies) {
     const height = this.getHeight()
     this.tbodyNode.innerHTML = ''
     for (let y = 0; y < height; y ++) {
       const trNode = document.createElement('tr')
       if (this.params.bodyHeaderType !== 'none') {
-        const value = this.params.bodyHeaderType === 'value' ? this.params.bodies[y][0] : y + 1
+        const value = this.params.bodyHeaderType === 'value' ? bodies[y][0] : y + 1
         this.appendBodyHeader(trNode, y, value)
       }
       const offsetX = this.params.bodyHeaderType === 'value' ? 1 : 0
-      for (let x = offsetX; x < this.params.bodies[y].length; x ++) {
+      for (let x = offsetX; x < bodies[y].length; x ++) {
         const tdNode = document.createElement('td')
         this.updateCell(x, y, tdNode)
         tdNode.setAttribute('data-x', x)
@@ -151,25 +386,18 @@ class EditableTable {
       tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
       tdNode.setAttribute('data-regulation', regulation.type || '')
       tdNode.innerHTML = ''
-      if (regulation.type === 'button') {
-        const buttonNode = document.createElement('div')
-        const textNode = document.createTextNode(this.params.bodies[y][x])
-        buttonNode.addEventListener('click', () => {
-          this.setCursor(x, y, false)
-          regulation.callback(x, y)
-        }, false)
-        buttonNode.appendChild(textNode)
-        tdNode.appendChild(buttonNode)
-      } else if (type === 'boolean') {
-        tdNode.setAttribute('data-checked', this.params.bodies[y][x].toString())
-      } else if (this.params.bodies[y][x] != null) {
-        const textNode = document.createTextNode(this.params.bodies[y][x])
-        tdNode.appendChild(textNode)
+      if (!this.callRegulation(regulation, 'onUpdateCell', x, y, tdNode)) {
+        if (type === 'boolean') {
+          tdNode.setAttribute('data-checked', this.params.bodies[y][x].toString())
+        } else if (this.params.bodies[y][x] != null) {
+          const textNode = document.createTextNode(this.params.bodies[y][x])
+          tdNode.appendChild(textNode)
+        }
       }
     }
   }
 
-  setCell (x, y, value) {
+  setCellValue (x, y, value) {
     const node = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
     const type = node.getAttribute('data-type')
     const v = type === 'boolean' ? Boolean(value) : type === 'number' ? (value === '' ? null : Number(value)) : value
@@ -177,116 +405,9 @@ class EditableTable {
     this.updateCell(x, y, node)
   }
 
-  traverse (callback) {
-    const xLength = this.getWidth()
-    const yLength = this.getHeight()
-    for (let y = 0; y < yLength; y ++) {
-      for (let x = 0; x < xLength; x ++) {
-        callback(x, y)
-      }
-    }
-  }
-
-  resetCellRegulations () {
-    this.cellRegulations.splice(0)
-    const xLength = this.getWidth()
-    const yLength = this.getHeight()
-    for (let y = 0; y < yLength; y ++) {
-      this.cellRegulations[y] = []
-      for (let x = 0; x < xLength; x ++) {
-        this.cellRegulations[y][x] = null
-      }
-    }
-  }
-
-  setupLlistbox () {
-    this.listboxNode = document.createElement('ol')
-    this.listboxNode.setAttribute('class', 'editable-table__listbox')
-    this.listboxNode.style['display'] = 'none'
-    this.params.containerNode.appendChild(this.listboxNode)
-  }
-
-  openListbox (targetNode, options) {
-    let selectedItemNode = this.updateListboxChildren(options)
-    this.adjustListboxIntoView(targetNode)
-    this.scrollIntoView(this.listboxNode, selectedItemNode, 0, 0)
-    this.setFocus(FocusType.Listbox)
-  }
-
-  updateListboxChildren (options) {
-    let selectedItemNode = null
-    this.listboxNode.innerHTML = ''
-    for (let i = 0; i < options.length; i ++) {
-      const itemNode = document.createElement('li')
-      const textNode = document.createTextNode(options[i])
-      if (i === this.listboxSelectedIndex) {
-        selectedItemNode = itemNode
-      }
-      itemNode.setAttribute('data-selected', i === this.listboxSelectedIndex)
-      itemNode.addEventListener('click', (event) => {
-        this.onClickListboxItem(i)
-      }, false)
-      itemNode.appendChild(textNode)
-      this.listboxNode.appendChild(itemNode)
-    }
-    return selectedItemNode
-  }
-
-  onClickListboxItem (index) {
-    this.listboxSelectedIndex = index
-    this.updateListboxToCell(this.cursor.x, this.cursor.y)
-  }
-
-  closeListbox () {
-    this.listboxNode.style['display'] = 'none'
-    this.setFocus(FocusType.Table)
-  }
-
-  addListboxSelectedIndex (adding, options) {
-    this.listboxNode.children[this.listboxSelectedIndex].setAttribute('data-selected', 'false')
-    this.listboxSelectedIndex += adding
-    this.listboxSelectedIndex = Math.max(0, Math.min(options.length - 1, this.listboxSelectedIndex))
-    this.listboxNode.children[this.listboxSelectedIndex].setAttribute('data-selected', 'true')
-    this.scrollIntoView(this.listboxNode, this.listboxNode.children[this.listboxSelectedIndex], 0, 0)
-  }
-
-  updateListboxToCell (x, y) {
-    const regulation = this.cellRegulations[y][x] || this.columnRegulations[x] || {}
-    const value = regulation.options[this.listboxSelectedIndex]
-    this.params.bodies[y][x] = value
-    this.updateCell(x, y)
-  }
-
-  adjustListboxIntoView (targetNode) {
-    this.listboxNode.style['opacity'] = '0'
-    this.listboxNode.style['display'] = ''
-    this.listboxNode.style['max-height'] = ''
-    let { left, top } = targetNode.getBoundingClientRect()
-    const maxHeight = Math.min(this.listboxNode.clientHeight, document.documentElement.clientHeight) - (this.params.listboxMargin || 0) * 2
-    top -= Math.abs(Math.min(document.documentElement.clientHeight - (top + maxHeight + (this.params.listboxMargin || 0)), 0))
-    this.listboxNode.style['left'] = `${left}px`
-    this.listboxNode.style['top'] = `${top}px`
-    this.listboxNode.style['max-height'] = `${maxHeight}px`
-    this.listboxNode.style['opacity'] = ''
-  }
-
-  setColumnRegulations (regulations) {
-    this.columnRegulations = []
-    for (let i = 0; i < regulations.length; i ++) {
-      this.columnRegulations[i] = regulations[i]
-    }
-  }
-
-  setCellRegulation (x, y, regulation) {
-    this.cellRegulations[y][x] = {}
-    for (let key in regulation) {
-      this.cellRegulations[y][x][key] = regulation[key]
-    }
-  }
-
   setFocus (value) {
-    this.focus = value
-    this.containerNode.setAttribute('data-focus', this.focus === FocusType.Table)
+    this.focusType = value
+    this.containerNode.setAttribute('data-focus', this.focusType === 'Table')
   }
 
   setInputting (value) {
@@ -294,146 +415,144 @@ class EditableTable {
     this.containerNode.setAttribute('data-inputting', this.isInputting)
   }
 
+  setupListeners () {
+    window.addEventListener('click', this.onClick.bind(this), false)
+    window.addEventListener('dblclick', this.onDoubleClick.bind(this), false)
+    window.addEventListener('keydown', this.onKeyDown.bind(this), false)
+    window.addEventListener('keyup', this.onKeyUp.bind(this), false)
+    window.addEventListener('resize', this.onResize.bind(this), false)
+  }
+
   edit (x, y, selected) {
     if (this.isInputting) {
       return
     }
-    const node = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
-    if (!node) {
+    const tdNode = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
+    if (!tdNode) {
       return
     }
-    const type = node.getAttribute('data-type')
+    const type = tdNode.getAttribute('data-type')
     const regulation = this.cellRegulations[y][x] || this.columnRegulations[x] || {}
-    if (regulation.type === 'button') {
-      regulation.callback(x, y)
-    } else if (regulation.type === 'select') {
-      this.listboxSelectedIndex = 0
-      for (let i = 0; i < regulation.options.length; i ++) {
-        if (regulation.options[i] === this.params.bodies[y][x]) {
-          this.listboxSelectedIndex = i
-          break
-        }
-      }
-      if (regulation.options.length > 0) {
-        this.openListbox(node, regulation.options)
-      }
-    } else if (type === 'boolean') {
-      this.params.bodies[y][x] = !this.params.bodies[y][x]
-      this.updateCell(x, y)
-    } else {
-      this.setInputting(true)
-      this.setFocus(FocusType.None)
-      node.innerHTML = ''
-      let inputNode = null
-      if (type === 'number') {
-        inputNode = document.createElement('input')
-        inputNode.setAttribute('size', '1')
-        inputNode.setAttribute('spellcheck', 'false')
-        inputNode.setAttribute('type', 'text')
-        inputNode.setAttribute('value', this.params.bodies[y][x] == null ? '' : this.params.bodies[y][x])
-        node.appendChild(inputNode)
+
+    if (!this.callRegulation(regulation, 'onEdit', x, y, tdNode)) {
+      if (type === 'boolean') {
+        this.params.bodies[y][x] = !this.params.bodies[y][x]
+        this.updateCell(x, y)
       } else {
-        inputNode = document.createElement('textarea')
-        inputNode.setAttribute('cols', '1')
-        inputNode.setAttribute('rows', '1')
-        inputNode.setAttribute('spellcheck', 'false')
-        inputNode.setAttribute('wrap', 'off')
-        inputNode.value = this.params.bodies[y][x]
-        node.appendChild(inputNode)
-      }
-
-      // テキストエリアのサイズを内容に合わせる
-      this.resizeNodeToFitContent(inputNode)
-      inputNode.addEventListener('keydown', () => {
-        setTimeout(() => {
-          this.resizeNodeToFitContent(inputNode)
-        }, 0)
-      }, false)
-
-      let isComposed = false
-
-      inputNode.addEventListener('keydown', (event) => {
-        const keyCode = event.code || event.key
-        // TODO: Safari で常に false の疑い
-        if (event.isComposing) {
-          if (keyCode === 'Enter') {
-            isComposed = true
-          }
+        this.setInputting(true)
+        this.setFocus('None')
+        tdNode.innerHTML = ''
+        let inputNode = null
+        if (type === 'number') {
+          inputNode = document.createElement('input')
+          inputNode.setAttribute('size', '1')
+          inputNode.setAttribute('spellcheck', 'false')
+          inputNode.setAttribute('type', 'text')
+          inputNode.setAttribute('value', this.params.bodies[y][x] == null ? '' : this.params.bodies[y][x])
+          tdNode.appendChild(inputNode)
         } else {
+          inputNode = document.createElement('textarea')
+          inputNode.setAttribute('cols', '1')
+          inputNode.setAttribute('rows', '1')
+          inputNode.setAttribute('spellcheck', 'false')
+          inputNode.setAttribute('wrap', 'off')
+          inputNode.value = this.params.bodies[y][x]
+          tdNode.appendChild(inputNode)
+        }
+
+        // テキストエリアのサイズを内容に合わせる
+        this.resizeNodeToFitContent(inputNode)
+        inputNode.addEventListener('keydown', () => {
+          setTimeout(() => {
+            this.resizeNodeToFitContent(inputNode)
+          }, 0)
+        }, false)
+
+        let isComposed = false
+
+        inputNode.addEventListener('keydown', (event) => {
+          const keyCode = event.code || event.key
+          // TODO: Safari で常に false の疑い
+          if (event.isComposing) {
+            if (keyCode === 'Enter') {
+              isComposed = true
+            }
+          } else {
+            switch (keyCode) {
+              case 'Enter': {
+                if (type === 'string') {
+                  // 文章内改行
+                  // NOTICE: Chrome では onKeyDown で ⌘ ＋ Enter をキャッチできない模様
+                  event.preventDefault()
+                  if (event.ctrlKey || event.metaKey) {
+                    const pos = inputNode.selectionStart
+                    const before = inputNode.value.substr(0, pos)
+                    const word = '\n'
+                    const after = inputNode.value.substr(pos, inputNode.value.length)
+                    inputNode.value = before + word + after
+                    inputNode.setSelectionRange(pos + 1, pos + 1)
+                  }
+                }
+                break
+              }
+              case 'Tab': {
+                event.preventDefault()
+                event.stopPropagation()
+                this.setFocus('Table')
+                this.setInputting(false)
+                this.setCellValue(x, y, inputNode.value)
+                if (event.shiftKey) {
+                  this.setCursorToLeft()
+                } else {
+                  this.setCursorToRight()
+                }
+                break
+              }
+              case 'Escape': {
+                event.stopPropagation()
+                this.setFocus('Table')
+                this.setInputting(false)
+                this.updateCell(x, y)
+                break
+              }
+            }
+          }
+        }, false)
+        inputNode.addEventListener('keyup', (event) => {
+          const keyCode = event.code || event.key
           switch (keyCode) {
             case 'Enter': {
-              if (type === 'string') {
-                // 文章内改行
-                // NOTICE: Chrome では onKeyDown で ⌘ ＋ Enter をキャッチできない模様
+              // 編集完了
+              if (!isComposed && !event.ctrlKey && !event.metaKey) {
                 event.preventDefault()
-                if (event.ctrlKey || event.metaKey) {
-                  const pos = inputNode.selectionStart
-                  const before = inputNode.value.substr(0, pos)
-                  const word = '\n'
-                  const after = inputNode.value.substr(pos, inputNode.value.length)
-                  inputNode.value = before + word + after
-                  inputNode.setSelectionRange(pos + 1, pos + 1)
-                }
+                event.stopPropagation()
+                this.setFocus('Table')
+                this.setInputting(false)
+                this.setCellValue(x, y, inputNode.value)
+                this.setCursorToDown()
+              }
+              if (isComposed) {
+                isComposed = false
               }
               break
             }
-            case 'Tab': {
-              event.preventDefault()
-              event.stopPropagation()
-              this.setFocus(FocusType.Table)
-              this.setInputting(false)
-              this.setCell(x, y, inputNode.value)
-              if (event.shiftKey) {
-                this.setCursorToLeft()
-              } else {
-                this.setCursorToRight()
-              }
-              break
-            }
-            case 'Escape': {
-              event.stopPropagation()
-              this.setFocus(FocusType.Table)
-              this.setInputting(false)
-              this.updateCell(x, y)
-              break
-            }
           }
-        }
-      }, false)
-      inputNode.addEventListener('keyup', (event) => {
-        const keyCode = event.code || event.key
-        switch (keyCode) {
-          case 'Enter': {
-            // 編集完了
-            if (!isComposed && !event.ctrlKey && !event.metaKey) {
-              event.preventDefault()
-              event.stopPropagation()
-              this.setFocus(FocusType.Table)
-              this.setInputting(false)
-              this.setCell(x, y, inputNode.value)
-              this.setCursorToDown()
-            }
-            if (isComposed) {
-              isComposed = false
-            }
-            break
-          }
-        }
-      }, false)
-      inputNode.addEventListener('blur', (event) => {
-        this.setFocus(FocusType.Table)
-        this.setInputting(false)
-        this.updateCell(x, y)
-      }, false)
+        }, false)
+        inputNode.addEventListener('blur', (event) => {
+          this.setFocus('Table')
+          this.setInputting(false)
+          this.updateCell(x, y)
+        }, false)
 
-      // NOTICE: DOM ツリー追加後であること
-      if (selected) {
-        inputNode.addEventListener('focus', inputNode.select, false)
-      } else {
-        const length = String(this.params.bodies[y][x]).length
-        inputNode.setSelectionRange(length, length)
+        // NOTICE: DOM ツリー追加後であること
+        if (selected) {
+          inputNode.addEventListener('focus', inputNode.select, false)
+        } else {
+          const length = String(this.params.bodies[y][x]).length
+          inputNode.setSelectionRange(length, length)
+        }
+        inputNode.focus()
       }
-      inputNode.focus()
     }
   }
 
@@ -459,7 +578,7 @@ class EditableTable {
           const bodyHeaderNode = this.tbodyNode.querySelector('tr th')
           const offsetLeft = bodyHeaderNode !== null ? bodyHeaderNode.clientWidth : 0
           const offsetTop = this.theadNode.clientHeight
-          this.scrollIntoView(this.containerNode, cell, offsetLeft, offsetTop)
+          this.scrollIntoView(this.scrollerNode, cell, offsetLeft, offsetTop)
         }
         this.cursor.x = x
         this.cursor.y = y
@@ -528,37 +647,29 @@ class EditableTable {
     return x >= offsetX && y >= 0 && x < this.getWidth() && y < this.getHeight()
   }
 
-  getWidth () {
-    return this.params.bodies == null ? 0 : (this.params.bodies.length > 0 ? this.params.bodies[0].length : 0)
-  }
-
-  getHeight () {
-    return this.params.bodies == null ? 0 : this.params.bodies.length
-  }
-
   onClick (event) {
-    if (event.target.closest('.editable-table__container') || event.target.closest('.editable-table__listbox')) {
-      this.setFocus(FocusType.Table)
-      this.closeListbox()
+    this.callRegulation('all', 'onClick', event.target)
+    if (event.target.closest('.editable-table')) {
+      this.setFocus('Table')
       if (event.target.closest('td')) {
         const x = parseInt(event.target.getAttribute('data-x'), 10)
         const y = parseInt(event.target.getAttribute('data-y'), 10)
         this.setCursor(x, y, false)
       }
     } else {
-      this.setFocus(FocusType.None)
+      this.setFocus('None')
     }
   }
 
   onDoubleClick (event) {
-    if (this.focus === FocusType.Table && event.target.closest('td')) {
+    if (this.focusType === 'Table' && event.target.closest('td')) {
       this.edit(this.cursor.x, this.cursor.y, false)
     }
   }
 
   onKeyDown (event) {
     const keyCode = event.code || event.key
-    if (this.focus === FocusType.Table) {
+    if (this.focusType === 'Table') {
       if (this.isCursorValid(this.cursor.x, this.cursor.y)) {
         const type = typeof this.params.bodies[this.cursor.y][this.cursor.x]
         const regulation = this.cellRegulations[this.cursor.y][this.cursor.x] || this.columnRegulations[this.cursor.x] || {}
@@ -618,14 +729,15 @@ class EditableTable {
           }
           case 'Backspace': {
             event.preventDefault()
-            if ((type === 'boolean' || type === 'number' || type === 'string') && (regulation.type !== 'button' && regulation.type !== 'select')) {
-              this.setCell(this.cursor.x, this.cursor.y, '')
+
+            if (regulation.type == null) {
+              this.setCellValue(this.cursor.x, this.cursor.y, '')
             }
             break
           }
           case 'Escape': {
             event.preventDefault()
-            this.setFocus(FocusType.None)
+            this.setFocus('None')
             break
           }
           case 'KeyC': {
@@ -655,51 +767,18 @@ class EditableTable {
         switch (keyCode) {
           case 'Escape': {
             event.preventDefault()
-            this.setFocus(FocusType.None)
+            this.setFocus('None')
             break
           }
         }
       }
-    } else if (this.focus === FocusType.Listbox) {
-      const regulation = this.cellRegulations[this.cursor.y][this.cursor.x] || this.columnRegulations[this.cursor.x] || {}
-      switch (keyCode) {
-        case 'ArrowUp': {
-          event.preventDefault()
-          this.addListboxSelectedIndex(- 1, regulation.options)
-          break
-        }
-        case 'ArrowDown': {
-          event.preventDefault()
-          this.addListboxSelectedIndex(1, regulation.options)
-          break
-        }
-        case 'Tab': {
-          event.preventDefault()
-          this.closeListbox()
-          if (event.shiftKey) {
-            this.setCursorToLeft()
-          } else {
-            this.setCursorToRight()
-          }
-          break
-        }
-        case ' ':
-        case 'Space': {
-          event.preventDefault()
-          this.updateListboxToCell(this.cursor.x, this.cursor.y)
-          this.closeListbox()
-          break
-        }
-        case 'Escape': {
-          this.closeListbox()
-          break
-        }
-      }
+    } else {
+      this.callRegulation('all', 'onKeyDown', keyCode)
     }
   }
 
   onEtceteraKeyDown (type, regulation, event) {
-    if (type !== 'boolean' && regulation.type !== 'button' && regulation.type !== 'select') {
+    if (type !== 'boolean' && regulation.type == null) {
       if (event.key.length === 1) {
         const charCode = event.key.charCodeAt(0)
         if (charCode >= 32 && charCode <= 126) {
@@ -712,51 +791,48 @@ class EditableTable {
 
   onKeyUp (event) {
     const keyCode = event.code || event.key
-    if (this.focus === FocusType.Table) {
+    if (this.focusType === 'Table') {
       switch (keyCode) {
         case 'Enter': {
           this.edit(this.cursor.x, this.cursor.y, false)
           break
         }
       }
-    } else if (this.focus === FocusType.Listbox) {
-      switch (keyCode) {
-        case 'Enter': {
-          this.updateListboxToCell(this.cursor.x, this.cursor.y)
-          this.closeListbox()
-          this.setCursorToDown()
-          break
-        }
-      }
+    } else {
+      this.callRegulation('all', 'onKeyUp', keyCode)
     }
   }
 
   copyCell (x, y, type, regulation) {
-    if (regulation.type === 'button') {
-      return
+    if (!this.callRegulation(regulation, 'onCopyCell', x, y)) {
+      this.clipboard.type = type
+      this.clipboard.regulation = regulation
+      this.clipboard.value = this.params.bodies[y][x]
     }
-
-    this.clipboard.type = type
-    this.clipboard.regulation = regulation
-    this.clipboard.value = this.params.bodies[y][x]
   }
 
   pasteCell (x, y, type, regulation) {
     if (this.clipboard.type === type && this.clipboard.regulation.type === regulation.type) {
-
-      if (regulation.type === 'select') {
-        if (regulation.options.indexOf(this.clipboard.value) === - 1) {
-          return
-        }
+      if (!this.callRegulation(regulation, 'onPasteCell', x, y)) {
+        this.params.bodies[y][x] = this.clipboard.value
+        this.updateCell(x, y)
       }
-
-      this.params.bodies[y][x] = this.clipboard.value
-      this.updateCell(x, y)
     }
   }
 
   onResize () {
     this.updateHeaderPositions()
+  }
+
+  callRegulation (regulation, eventName, ...params) {
+    for (let i = 0; i < this.regulations.length; i ++) {
+      if ((regulation === 'all' || this.regulations[i].type === regulation.type) && this.regulations[i][eventName] != null) {
+        if (!this.regulations[i][eventName](this, regulation, ...params)) {
+          return true
+        }
+      }
+    }
+    return false
   }
 }
 

@@ -4,210 +4,214 @@ $fg-color: #303030;
 $accent-color: #0080f0;
 
 .editable-table {
-  &__container {
-    &, * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  background-color: $bg-color;
+  border: 2px solid mix($bg-color, $fg-color, 75%);
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  &[data-focus="true"] {
+    border-color: $accent-color;
+  }
 
-    // ======== Container ========
+  // ======== All Elements ========
 
-    background-color: $bg-color;
-    border: 2px solid mix($bg-color, $fg-color, 75%);
-    -moz-osx-font-smoothing: grayscale;
-    -webkit-font-smoothing: antialiased;
+  &, * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  // ======== Scroller ========
+
+  &__scroller {
     overflow: auto;
     position: relative;
     z-index: 0;
-    &[data-focus="true"] {
-      border-color: $accent-color;
+  }
+
+  // ======== TABLE ========
+
+  table {
+    border-spacing: 0;
+  }
+
+  // ======== TBODY ========
+
+  tbody {
+    overflow: auto;
+  }
+
+  // ======== TH and TD ========
+
+  th,
+  td {
+    border-right: 1px solid mix($bg-color, $fg-color, 75%);
+    border-bottom: 1px solid mix($bg-color, $fg-color, 75%);
+    cursor: default;
+    font-family: $font-family;
+    font-size: 1rem;
+    line-height: 1.25;
+    padding: 0.5rem;
+    user-select: none;
+  }
+
+  // ======== TH ========
+
+  th {
+    background-color: mix($bg-color, $fg-color, 87.5%);
+    color: $fg-color;
+    font-weight: 700;
+    position: sticky;
+    white-space: nowrap;
+
+    // Edge で position: sticky; にした th で border が表示されない不具合への対処
+    // SEE: https://qiita.com/h-koeda/items/3b4c6a465ff4f81c16dc
+    _:-ms-lang(x), & {
+      background-clip: padding-box;
     }
-
-    // ======== TABLE ========
-
-    table {
-      border-spacing: 0;
-    }
-
-    // ======== TBODY ========
-
-    tbody {
-      overflow: auto;
-    }
-
-    // ======== TH and TD ========
-
-    th,
-    td {
-      border-right: 1px solid mix($bg-color, $fg-color, 75%);
-      border-bottom: 1px solid mix($bg-color, $fg-color, 75%);
-      cursor: default;
-      font-family: $font-family;
-      font-size: 1rem;
-      line-height: 1.25;
-      padding: 0.5rem;
-      user-select: none;
-    }
-
-    // ======== TH ========
-
+  }
+  thead {
     th {
-      background-color: mix($bg-color, $fg-color, 87.5%);
-      color: $fg-color;
-      font-weight: 700;
-      position: sticky;
-      white-space: nowrap;
-
-      // Edge で position: sticky; にした th で border が表示されない不具合への対処
-      // SEE: https://qiita.com/h-koeda/items/3b4c6a465ff4f81c16dc
-      _:-ms-lang(x), & {
-        background-clip: padding-box;
-      }
+      // top: 0;
+      z-index: 2;
     }
-    thead {
-      th {
-        // top: 0;
-        z-index: 2;
-      }
 
-      tr:first-child th:first-child {
-        left: 0;
-        z-index: 3;
-      }
-    }
-    tbody th {
+    tr:first-child th:first-child {
       left: 0;
-      z-index: 1;
-    }
-
-    // ======== TD ========
-
-    tr td {
-      background-color: $bg-color;
-      color: $fg-color;
-      position: relative;
-      white-space: pre;
-    }
-    tr:nth-child(even) td {
-      background-color: mix($bg-color, $fg-color, 93.75%);
-    }
-    tr td[data-cursor="true"] {
-      background-color: $accent-color;
-      color: $bg-color;
-    }
-    &[data-focus="false"] tr td[data-cursor="true"] {
-      background-color: mix($bg-color, $accent-color, 50%);
-    }
-    &[data-inputting="true"] tr td[data-cursor="true"] {
-      padding: 0;
-    }
-
-    // ======== Boolean Type ========
-
-    tr td[data-type="boolean"] {
-      cursor: pointer;
-      &[data-cursor="false"]:hover {
-        color: $accent-color;
-      }
-
-      &::before {
-        background-color: $fg-color;
-        content: "";
-        display: block;
-        margin: 0 auto;
-        mask-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24"><path fill="%23000000" d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" /></svg>');
-        width: 1rem;
-        height: 1rem;
-      }
-      &[data-checked="false"]::before {
-        opacity: 0.125;
-      }
-      &[data-cursor="true"]::before {
-        background-color: $bg-color;
-      }
-    }
-
-    // ======== Number and Text Type ========
-
-    td input[type="text"],
-    td textarea {
-      appearance: none;
-      background-color: $bg-color;
-      border-style: none;
-      color: $fg-color;
-      display: block;
-      font-family: $font-family;
-      font-size: 1rem;
-      outline: 2px solid $accent-color;
-      position: relative;
       z-index: 3;
     }
+  }
+  tbody th {
+    left: 0;
+    z-index: 1;
+  }
 
-    // ======== Number Type ========
+  // ======== TD ========
 
-    tr td[data-type="number"] {
-      text-align: right;
+  tr td {
+    background-color: $bg-color;
+    color: $fg-color;
+    position: relative;
+    white-space: pre;
+  }
+  tr:nth-child(even) td {
+    background-color: mix($bg-color, $fg-color, 93.75%);
+  }
+  tr td[data-cursor="true"] {
+    background-color: $accent-color;
+    color: $bg-color;
+  }
+  &[data-focus="false"] tr td[data-cursor="true"] {
+    background-color: mix($bg-color, $accent-color, 50%);
+  }
+  &[data-inputting="true"] tr td[data-cursor="true"] {
+    padding: 0;
+  }
+
+  // ======== Boolean Type ========
+
+  tr td[data-type="boolean"] {
+    cursor: pointer;
+    &[data-cursor="false"]:hover {
+      color: $accent-color;
     }
 
-    td input[type="text"] {
-      padding: 0 0.5rem;
+    &::before {
+      background-color: $fg-color;
+      content: "";
+      display: block;
+      margin: 0 auto;
+      mask-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24"><path fill="%23000000" d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" /></svg>');
+      width: 1rem;
+      height: 1rem;
     }
-
-    // ======== Text Type ========
-
-    td textarea {
-      line-height: 1.15;
-      height: 100%;
-      overflow: hidden;
-      overflow-wrap: normal;
-      padding: 0.5rem;
-      resize: none;
-      word-break: keep-all;
-      white-space: pre-line;
-      word-break: keep-all;
+    &[data-checked="false"]::before {
+      opacity: 0.125;
     }
+    &[data-cursor="true"]::before {
+      background-color: $bg-color;
+    }
+  }
 
-    // ======== Button Regulation ========
+  // ======== Number and Text Type ========
 
-    tr td[data-regulation="button"] {
+  td input[type="text"],
+  td textarea {
+    appearance: none;
+    background-color: $bg-color;
+    border-style: none;
+    color: $fg-color;
+    display: block;
+    font-family: $font-family;
+    font-size: 1rem;
+    outline: 2px solid $accent-color;
+    position: relative;
+    z-index: 3;
+  }
+
+  // ======== Number Type ========
+
+  tr td[data-type="number"] {
+    text-align: right;
+  }
+
+  td input[type="text"] {
+    padding: 0 0.5rem;
+  }
+
+  // ======== Text Type ========
+
+  td textarea {
+    line-height: 1.15;
+    height: 100%;
+    overflow: hidden;
+    overflow-wrap: normal;
+    padding: 0.5rem;
+    resize: none;
+    word-break: keep-all;
+    white-space: pre-line;
+    word-break: keep-all;
+  }
+
+  // ======== Button Regulation ========
+
+  tr td[data-regulation="button"] {
+    cursor: pointer;
+    padding: 0.25rem;
+
+    div {
+      background-color: $bg-color;
+      border: 1px solid mix($bg-color, $fg-color, 75%);
+      border-radius: 4px;
+      color: $fg-color;
       cursor: pointer;
-      padding: 0.25rem;
-
-      div {
-        background-color: $bg-color;
-        border: 1px solid mix($bg-color, $fg-color, 75%);
-        border-radius: 4px;
-        color: $fg-color;
-        cursor: pointer;
-        padding: 0.2rem 0.5rem; // NOTICE: `0.25rem` だと Chrome でズレる
-        text-align: center;
-        &:hover {
-          background-color: mix($bg-color, $accent-color, 87.5%);
-        }
+      padding: 0.2rem 0.5rem; // NOTICE: `0.25rem` だと Chrome でズレる
+      text-align: center;
+      &:hover {
+        background-color: mix($bg-color, $accent-color, 87.5%);
       }
     }
+  }
 
-    // ======== Select Regulation ========
+  // ======== Select Regulation ========
 
-    tr td[data-regulation="select"] {
-      padding-right: 1.5rem;
+  tr td[data-regulation="select"] {
+    padding-right: 1.5rem;
 
-      &::after {
-        background-color: $fg-color;
-        content: "";
-        display: block;
-        mask-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24"><path fill="%23000000" d="M1,2H23L12,21" /></svg>');
-        opacity: 0.125;
-        position: absolute;
-        top: calc(50% - 0.5rem);
-        right: 0.5rem;
-        width: 1rem;
-        height: 1rem;
-      }
-      &[data-cursor="true"]::after {
-        background-color: $bg-color;
-      }
+    &::after {
+      background-color: $fg-color;
+      content: "";
+      display: block;
+      mask-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24"><path fill="%23000000" d="M1,2H23L12,21" /></svg>');
+      opacity: 0.125;
+      position: absolute;
+      top: calc(50% - 0.5rem);
+      right: 0.5rem;
+      width: 1rem;
+      height: 1rem;
+    }
+    &[data-cursor="true"]::after {
+      background-color: $bg-color;
     }
   }
 

@@ -21,11 +21,11 @@ body {
 .mb1 {
   margin-bottom: 1rem;
 }
-.container {
+.editable-table {
   display: inline-block;
   max-width: 100%;
 }
-.editable-table__container {
+.editable-table__scroller {
   max-height: 320px;
 }
 small {
@@ -37,7 +37,7 @@ small {
   </head>
   <body>
     <header class="mb1">
-      <h1 class="mb1">editable-table-js 1.0.13 (WIP)</h1>
+      <h1 class="mb1">editable-table-js 1.0.14 (WIP)</h1>
       <a href="https://github.com/mimonelu/editable-table">GitHub</a> | <a href="https://www.npmjs.com/package/editable-table-js">npm</a>
     </header>
     <div class="container mb1"></div>
@@ -53,10 +53,10 @@ const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   headers: [
     [ 'Primitives', 'Regulations' ],
-    [ 'Boolean', 'Number', 'String', 'Select Regulation', 'Button Regulation' ],
+    [ 'Boolean', 'Number', 'String', 'Select Regulation', 'Button Regulation', 'Custom Regulation' ],
   ],
   headerSpans: [
-    [ { x: 3 }, { x: 2 } ],
+    [ { x: 3 }, { x: 3 } ],
   ],
   bodies: [ ...Array(64).keys() ].map((n) => [
     Math.random() >= 0.5,
@@ -64,11 +64,25 @@ const editableTable = new EditableTable({
     [ ...Array(32).keys() ].map(() => Math.floor(Math.random() * 36).toString(36)).join(''),
     options[Math.floor(Math.random() * options.length)],
     'Button',
+    'Custom Regulation',
   ]),
+  regulations: [
+    {
+      type: 'custom',
+      onEdit (instance, regulation, x, y, tdNode) {
+        return false
+      },
+      onUpdateCell (instance, regulation, x, y, tdNode) {
+        const textNode = document.createTextNode(`${x} + ${y} = ${x + y}`)
+        tdNode.appendChild(textNode)
+        return false
+      }
+    }
+  ],
   columnRegulations: [
     null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
       alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
-    }}
+    } }, { type: 'custom' }
   ],
   autofocus: true,
   bodyHeaderType: 'line', // 'none' | 'value' | etc (line number)
