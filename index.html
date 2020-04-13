@@ -53,10 +53,10 @@ const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   headers: [
     [ 'Primitives', 'Regulations' ],
-    [ 'Boolean', 'Number', 'String', 'Select Regulation', 'Button Regulation', 'Custom Regulation' ],
+    [ 'Boolean', 'Number', 'String', 'Select Regulation', 'Button Regulation', 'Link Regulation', 'Custom Regulation' ],
   ],
   headerSpans: [
-    [ { x: 3 }, { x: 3 } ],
+    [ { x: 3 }, { x: 4 } ],
   ],
   bodies: [ ...Array(64).keys() ].map((n) => [
     Math.random() >= 0.5,
@@ -64,6 +64,7 @@ const editableTable = new EditableTable({
     [ ...Array(32).keys() ].map(() => Math.floor(Math.random() * 36).toString(36)).join(''),
     options[Math.floor(Math.random() * options.length)],
     'Button',
+    `https://www.google.com/search?q=${n + 1}`,
     'Custom Regulation',
   ]),
   regulations: [
@@ -82,7 +83,7 @@ const editableTable = new EditableTable({
   columnRegulations: [
     null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
       alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
-    } }, { type: 'custom' }
+    } }, { type: 'link' }, { type: 'custom' }
   ],
   autofocus: true,
   bodyHeaderType: 'line', // 'none' | 'value' | etc (line number)

@@ -72,7 +72,6 @@ $accent-color: #0080f0;
   }
   thead {
     th {
-      // top: 0;
       z-index: 2;
     }
 
@@ -190,6 +189,22 @@ $accent-color: #0080f0;
       &:hover {
         background-color: mix($bg-color, $accent-color, 87.5%);
       }
+    }
+  }
+
+  // ======== Link Regulation ========
+
+  tr td[data-regulation="link"] {
+    cursor: pointer;
+
+    a {
+      color: $accent-color;
+      &:hover {
+        text-decoration: none;
+      }
+    }
+    &[data-cursor="true"] a {
+      color: $bg-color;
     }
   }
 

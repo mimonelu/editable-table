@@ -1,8 +1,10 @@
 import buttonRegulation from './src/button-regulation.js'
+import linkRegulation from './src/link-regulation.js'
 import selectRegulation from './src/select-regulation.js'
 
 const BuiltinRegulations = [
   buttonRegulation,
+  linkRegulation,
   selectRegulation,
 ]
 
