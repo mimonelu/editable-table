@@ -14,6 +14,8 @@ class EditableTable {
     this.setupProperties()
     this.addRegulations(BuiltinRegulations)
     this.addRegulations(this.params.regulations)
+    this.setColumnFilters(this.params.columnFilters)
+    this.setCellFilters()
     this.setColumnRegulations(this.params.columnRegulations)
     this.setCellRegulations()
     this.setupTable()
@@ -24,6 +26,8 @@ class EditableTable {
   setupProperties () {
     this.focusType = !!this.params.autofocus ? 'Table' : 'None'
     this.regulations = []
+    this.columnFilters = []
+    this.cellFilters = []
     this.columnRegulations = []
     this.cellRegulations = []
     this.containerNode = null
@@ -62,6 +66,31 @@ class EditableTable {
 
   getHeight () {
     return this.params.bodies == null ? 0 : this.params.bodies.length
+  }
+
+  setColumnFilters (filters) {
+    this.columnFilters.splice(0)
+    if (filters != null) {
+      for (let i = 0; i < filters.length; i ++) {
+        this.columnFilters[i] = filters[i]
+      }
+    }
+    const xLength = this.getWidth()
+    for (let x = 0; x < xLength; x ++) {
+      this.columnFilters[x] = this.columnFilters[x] || null
+    }
+  }
+
+  setCellFilters () {
+    this.cellFilters.splice(0)
+    const xLength = this.getWidth()
+    const yLength = this.getHeight()
+    for (let y = 0; y < yLength; y ++) {
+      this.cellFilters[y] = []
+      for (let x = 0; x < xLength; x ++) {
+        this.cellFilters[y][x] = null
+      }
+    }
   }
 
   addRegulations (regulations) {
@@ -210,7 +239,8 @@ class EditableTable {
       tdNode = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
     }
     if (tdNode) {
-      const type = this.params.bodies[y][x] == null ? 'number' : typeof this.params.bodies[y][x]
+      const value = this.params.bodies[y][x]
+      const type = value == null ? 'number' : typeof value
       const regulation = this.cellRegulations[y][x] || this.columnRegulations[x] || {}
       tdNode.setAttribute('data-type', type)
       tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
@@ -218,9 +248,12 @@ class EditableTable {
       tdNode.innerHTML = ''
       if (!this.callRegulation(regulation, 'onUpdateCell', x, y, tdNode)) {
         if (type === 'boolean') {
-          tdNode.setAttribute('data-checked', this.params.bodies[y][x].toString())
-        } else if (this.params.bodies[y][x] != null) {
-          const textNode = document.createTextNode(this.params.bodies[y][x])
+          tdNode.setAttribute('data-checked', value.toString())
+        } else if (value != null) {
+          const filterName = this.cellFilters[y][x] || this.columnFilters[x] || ''
+          const filterCallback = this.params.filters[filterName]
+          const pseudoValue = filterCallback != null ? filterCallback(value) : value
+          const textNode = document.createTextNode(pseudoValue)
           tdNode.appendChild(textNode)
         }
       }

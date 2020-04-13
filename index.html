@@ -52,21 +52,30 @@ const options = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'
 const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   headers: [
-    [ 'Primitives', 'Regulations' ],
-    [ 'Boolean', 'Number', 'String', 'Select Regulation', 'Button Regulation', 'Link Regulation', 'Custom Regulation' ],
+    [ 'Primitives', 'Filters', 'Regulations' ],
+    [ 'Boolean', 'Number', 'String', 'Custom Filter', 'Select Regulation', 'Button Regulation', 'Link Regulation', 'Custom Regulation' ],
   ],
   headerSpans: [
-    [ { x: 3 }, { x: 4 } ],
+    [ { x: 3 }, null, { x: 4 } ],
   ],
   bodies: [ ...Array(64).keys() ].map((n) => [
     Math.random() >= 0.5,
     Math.random(),
     [ ...Array(32).keys() ].map(() => Math.floor(Math.random() * 36).toString(36)).join(''),
+    Math.floor(Math.random() * 100000),
     options[Math.floor(Math.random() * options.length)],
     'Button',
     `https://www.google.com/search?q=${n + 1}`,
     'Custom Regulation',
   ]),
+  filters: {
+    dollar (value) {
+      return `$ ${value.toLocaleString()}`
+    }
+  },
+  columnFilters: [
+    null, null, null, 'dollar', null, null, null, null
+  ],
   regulations: [
     {
       type: 'custom',
@@ -77,11 +86,11 @@ const editableTable = new EditableTable({
         const textNode = document.createTextNode(`${x} + ${y} = ${x + y}`)
         tdNode.appendChild(textNode)
         return false
-      }
-    }
+      },
+    },
   ],
   columnRegulations: [
-    null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
+    null, null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
       alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
     } }, { type: 'link' }, { type: 'custom' }
   ],
