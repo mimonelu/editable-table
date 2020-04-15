@@ -1,16 +1,16 @@
-$font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif;
-$bg-color: #ffffff;
-$fg-color: #303030;
-$accent-color: #0080f0;
+$editable-table-font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Yu Gothic", YuGothic, sans-serif !default;
+$editable-table-bg-color: #ffffff !default;
+$editable-table-fg-color: #303030 !default;
+$editable-table-accent-color: #0080f0 !default;
 
 .editable-table {
-  background-color: $bg-color;
-  border: 2px solid mix($bg-color, $fg-color, 75%);
+  background-color: $editable-table-bg-color;
+  border: 2px solid mix($editable-table-bg-color, $editable-table-fg-color, 75%);
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   position: relative;
   &[data-focus="true"] {
-    border-color: $accent-color;
+    border-color: $editable-table-accent-color;
   }
 
   // ======== All Elements ========
@@ -45,10 +45,10 @@ $accent-color: #0080f0;
 
   th,
   td {
-    border-right: 1px solid mix($bg-color, $fg-color, 75%);
-    border-bottom: 1px solid mix($bg-color, $fg-color, 75%);
+    border-right: 1px solid mix($editable-table-bg-color, $editable-table-fg-color, 75%);
+    border-bottom: 1px solid mix($editable-table-bg-color, $editable-table-fg-color, 75%);
     cursor: default;
-    font-family: $font-family;
+    font-family: $editable-table-font-family;
     font-size: 1rem;
     line-height: 1.25;
     padding: 0.5rem;
@@ -58,8 +58,8 @@ $accent-color: #0080f0;
   // ======== TH ========
 
   th {
-    background-color: mix($bg-color, $fg-color, 87.5%);
-    color: $fg-color;
+    background-color: mix($editable-table-bg-color, $editable-table-fg-color, 87.5%);
+    color: $editable-table-fg-color;
     font-weight: 700;
     position: sticky;
     white-space: nowrap;
@@ -88,20 +88,20 @@ $accent-color: #0080f0;
   // ======== TD ========
 
   tr td {
-    background-color: $bg-color;
-    color: $fg-color;
+    background-color: $editable-table-bg-color;
+    color: $editable-table-fg-color;
     position: relative;
     white-space: pre;
   }
   tr:nth-child(even) td {
-    background-color: mix($bg-color, $fg-color, 93.75%);
+    background-color: mix($editable-table-bg-color, $editable-table-fg-color, 93.75%);
   }
   tr td[data-cursor="true"] {
-    background-color: $accent-color;
-    color: $bg-color;
+    background-color: $editable-table-accent-color;
+    color: $editable-table-bg-color;
   }
   &[data-focus="false"] tr td[data-cursor="true"] {
-    background-color: mix($bg-color, $accent-color, 50%);
+    background-color: mix($editable-table-bg-color, $editable-table-accent-color, 50%);
   }
   &[data-inputting="true"] tr td[data-cursor="true"] {
     padding: 0;
@@ -112,11 +112,11 @@ $accent-color: #0080f0;
   tr td[data-type="boolean"] {
     cursor: pointer;
     &[data-cursor="false"]:hover {
-      color: $accent-color;
+      color: $editable-table-accent-color;
     }
 
     &::before {
-      background-color: $fg-color;
+      background-color: $editable-table-fg-color;
       content: "";
       display: block;
       margin: 0 auto;
@@ -128,7 +128,7 @@ $accent-color: #0080f0;
       opacity: 0.125;
     }
     &[data-cursor="true"]::before {
-      background-color: $bg-color;
+      background-color: $editable-table-bg-color;
     }
   }
 
@@ -137,13 +137,13 @@ $accent-color: #0080f0;
   td input[type="text"],
   td textarea {
     appearance: none;
-    background-color: $bg-color;
+    background-color: $editable-table-bg-color;
     border-style: none;
-    color: $fg-color;
+    color: $editable-table-fg-color;
     display: block;
-    font-family: $font-family;
+    font-family: $editable-table-font-family;
     font-size: 1rem;
-    outline: 2px solid $accent-color;
+    outline: 2px solid $editable-table-accent-color;
     position: relative;
     z-index: 3;
   }
@@ -179,15 +179,15 @@ $accent-color: #0080f0;
     padding: 0.25rem;
 
     div {
-      background-color: $bg-color;
-      border: 1px solid mix($bg-color, $fg-color, 75%);
+      background-color: $editable-table-bg-color;
+      border: 1px solid mix($editable-table-bg-color, $editable-table-fg-color, 75%);
       border-radius: 4px;
-      color: $fg-color;
+      color: $editable-table-fg-color;
       cursor: pointer;
       padding: 0.2rem 0.5rem; // NOTICE: `0.25rem` だと Chrome でズレる
       text-align: center;
       &:hover {
-        background-color: mix($bg-color, $accent-color, 87.5%);
+        background-color: mix($editable-table-bg-color, $editable-table-accent-color, 87.5%);
       }
     }
   }
@@ -198,13 +198,13 @@ $accent-color: #0080f0;
     cursor: pointer;
 
     a {
-      color: $accent-color;
+      color: $editable-table-accent-color;
       &:hover {
         text-decoration: none;
       }
     }
     &[data-cursor="true"] a {
-      color: $bg-color;
+      color: $editable-table-bg-color;
     }
   }
 
@@ -214,7 +214,7 @@ $accent-color: #0080f0;
     padding-right: 1.5rem;
 
     &::after {
-      background-color: $fg-color;
+      background-color: $editable-table-fg-color;
       content: "";
       display: block;
       mask-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 24 24"><path fill="%23000000" d="M1,2H23L12,21" /></svg>');
@@ -226,18 +226,18 @@ $accent-color: #0080f0;
       height: 1rem;
     }
     &[data-cursor="true"]::after {
-      background-color: $bg-color;
+      background-color: $editable-table-bg-color;
     }
   }
 
   // ======== Listbox ========
 
   &__listbox {
-    background-color: $bg-color;
-    border: 2px solid $accent-color;
+    background-color: $editable-table-bg-color;
+    border: 2px solid $editable-table-accent-color;
     box-shadow: 0 0 8px 1px rgba(0, 0, 0, 0.25);
     box-sizing: border-box;
-    color: $fg-color;
+    color: $editable-table-fg-color;
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
     list-style: none;
@@ -249,15 +249,15 @@ $accent-color: #0080f0;
 
     li {
       cursor: pointer;
-      font-family: $font-family;
+      font-family: $editable-table-font-family;
       padding: 0.25rem 0.5rem;
       user-select: none;
       &:hover {
-        background-color: mix($bg-color, $accent-color, 87.5%);
+        background-color: mix($editable-table-bg-color, $editable-table-accent-color, 87.5%);
       }
       &[data-selected="true"] {
-        background-color: $accent-color;
-        color: $bg-color;
+        background-color: $editable-table-accent-color;
+        color: $editable-table-bg-color;
       }
     }
   }
