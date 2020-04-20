@@ -208,22 +208,33 @@ class EditableTable {
     const height = this.getHeight()
     this.tbodyNode.innerHTML = ''
     for (let y = 0; y < height; y ++) {
-      const trNode = document.createElement('tr')
-      if (this.params.bodyHeaderType !== 'none') {
-        const value = this.params.bodyHeaderType === 'value' ? bodies[y][0] : y + 1
-        this.appendBodyHeader(trNode, y, value)
-      }
-      const offsetX = this.params.bodyHeaderType === 'value' ? 1 : 0
-      for (let x = offsetX; x < bodies[y].length; x ++) {
-        const tdNode = document.createElement('td')
-        this.updateCell(x, y, tdNode)
-        tdNode.setAttribute('data-x', x)
-        tdNode.setAttribute('data-y', y)
-        trNode.appendChild(tdNode)
-      }
-      this.tbodyNode.appendChild(trNode)
+      this.appendBodyRow(y)
     }
     this.setCursor(0, 0)
+  }
+
+  appendBodyData (data) {
+    this.params.bodies.push(data)
+    const xLength = this.getWidth()
+    this.cellRegulations.push(Array(xLength).fill(null))
+    this.cellFilters.push(Array(xLength).fill(null))
+  }
+
+  appendBodyRow (y) {
+    const trNode = document.createElement('tr')
+    if (this.params.bodyHeaderType !== 'none') {
+      const value = this.params.bodyHeaderType === 'value' ? this.params.bodies[y][0] : y + 1
+      this.appendBodyHeader(trNode, y, value)
+    }
+    const offsetX = this.params.bodyHeaderType === 'value' ? 1 : 0
+    for (let x = offsetX; x < this.params.bodies[y].length; x ++) {
+      const tdNode = document.createElement('td')
+      this.updateCell(x, y, tdNode)
+      tdNode.setAttribute('data-x', x)
+      tdNode.setAttribute('data-y', y)
+      trNode.appendChild(tdNode)
+    }
+    this.tbodyNode.appendChild(trNode)
   }
 
   appendBodyHeader (trNode, y, value) {
@@ -415,6 +426,7 @@ class EditableTable {
           inputNode.setSelectionRange(length, length)
         }
         inputNode.focus()
+        this.callRegulation(regulation, 'onEditPrepared', x, y, tdNode, inputNode)
       }
     }
   }
@@ -429,6 +441,12 @@ class EditableTable {
   }
 
   setCursor (x, y, enableScroll = true) {
+    if (x == null) {
+      x = this.getWidth() - 1
+    }
+    if (y == null) {
+      y = this.getHeight() - 1
+    }
     if (this.isCursorValid(x, y)) {
       const cellOnCursor = this.tableNode.querySelector('[data-cursor="true"]')
       if (cellOnCursor) {
