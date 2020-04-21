@@ -1,6 +1,6 @@
 {
   "name": "editable-table-js",
-  "version": "1.0.16",
+  "version": "1.0.16.1",
   "description": "",
   "main": "dist/editable-table.js",
   "scripts": {

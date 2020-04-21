@@ -143,7 +143,7 @@ export default {
     this.listboxNode.style['display'] = ''
     this.listboxNode.style['max-height'] = ''
     let { left, top } = targetNode.getBoundingClientRect()
-    const maxHeight = Math.min(this.listboxNode.clientHeight, document.documentElement.clientHeight) - (instance.params.listboxMargin || 0) * 2
+    const maxHeight = Math.min(this.listboxNode.offsetHeight, document.documentElement.clientHeight - (instance.params.listboxMargin || 0) * 2)
     top -= Math.abs(Math.min(document.documentElement.clientHeight - (top + maxHeight + (instance.params.listboxMargin || 0)), 0))
     this.listboxNode.style['left'] = `${left}px`
     this.listboxNode.style['top'] = `${top}px`
