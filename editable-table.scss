@@ -230,6 +230,12 @@ $editable-table-accent-color: #0080f0 !default;
     }
   }
 
+  // ======== Disabled ========
+
+  tr td[data-disabled="true"] {
+    color: mix($editable-table-bg-color, $editable-table-fg-color, 75%);
+  }
+
   // ======== Listbox ========
 
   &__listbox {

@@ -64,6 +64,10 @@ class EditableTable {
     return this.params.columnRegulations != null && this.params.columnRegulations[x] != null && this.params.columnRegulations[x].filter != null ? this.params.columnRegulations[x].filter : ''
   }
 
+  isDisabled (x, y) {
+    return this.params.columnRegulations != null && this.params.columnRegulations[x] != null && this.params.columnRegulations[x].disabled != null ? this.params.columnRegulations[x].disabled : false
+  }
+
   setHeaders (headers) {
     this.theadNode.innerHTML = ''
     if (headers != null && headers.length > 0) {
@@ -172,9 +176,11 @@ class EditableTable {
     if (tdNode) {
       const value = this.params.bodies[y][x]
       const type = value == null ? 'number' : typeof value
+      const disabled = this.isDisabled(x)
       const extension = this.getExtension(x)
       tdNode.setAttribute('data-type', type)
       tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
+      tdNode.setAttribute('data-disabled', disabled)
       tdNode.setAttribute('data-extension', extension.type || '')
       tdNode.innerHTML = ''
       if (!this.callExtension(extension, 'onUpdateCell', x, y, tdNode)) {
@@ -222,6 +228,9 @@ class EditableTable {
     }
     const tdNode = this.tableNode.querySelector(`[data-x="${x}"][data-y="${y}"]`)
     if (!tdNode) {
+      return
+    }
+    if (this.isDisabled(x)) {
       return
     }
     const type = tdNode.getAttribute('data-type')
@@ -612,8 +621,10 @@ class EditableTable {
   pasteCell (x, y, type, extension) {
     if (this.clipboard.type === type && this.clipboard.extension.type === extension.type) {
       if (!this.callExtension(extension, 'onPasteCell', x, y)) {
-        this.params.bodies[y][x] = this.clipboard.value
-        this.updateCell(x, y)
+        if (!this.isDisabled(x)) {
+          this.params.bodies[y][x] = this.clipboard.value
+          this.updateCell(x, y)
+        }
       }
     }
   }

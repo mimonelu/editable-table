@@ -69,16 +69,17 @@ const makeRowData = (n) => [
   `https://www.google.com/search?q=${n + 1}`,
   'Custom Extension',
   Math.floor(Math.random() * 100000),
+  n + 1,
 ]
 
 const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   headers: [
-    [ 'Primitives', 'Extensions', 'Filters' ],
-    [ 'Boolean', 'Number', 'String', 'Select Extension', 'Button Extension', 'Link Extension', 'Custom Extension', 'Custom Filter' ],
+    [ 'Primitives', 'Extensions', 'Filters', 'Etc' ],
+    [ 'Boolean', 'Number', 'String', 'Select Extension', 'Button Extension', 'Link Extension', 'Custom Extension', 'Custom Filter', 'Disabled' ],
   ],
   headerSpans: [
-    [ { x: 3 }, { x: 4 }, null ],
+    [ { x: 3 }, { x: 4 }, null, null ],
   ],
   bodies: [ ...Array(64).keys() ].map(makeRowData),
   extensions: [
@@ -100,16 +101,17 @@ const editableTable = new EditableTable({
     }
   },
   columnRegulations: [
-    { extension: null, filter: null },
-    { extension: null, filter: null },
-    { extension: null, filter: null },
-    { extension: { type: 'select', options }, filter: null },
+    null,
+    null,
+    null,
+    { extension: { type: 'select', options } },
     { extension: { type: 'button', callback: (x, y) => {
       alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
-    } }, filter: null },
-    { extension: { type: 'link' }, filter: null },
-    { extension: { type: 'custom' }, filter: null },
-    { extension: null, filter: 'dollar' },
+    } } },
+    { extension: { type: 'link' } },
+    { extension: { type: 'custom' } },
+    { filter: 'dollar' },
+    { disabled: true },
   ],
   autofocus: true,
   bodyHeaderType: 'line', // 'none' | 'value' | etc (line number)
