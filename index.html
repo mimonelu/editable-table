@@ -64,31 +64,23 @@ const makeRowData = (n) => [
   Math.random() >= 0.5,
   Math.random().toFixed(8),
   [ ...Array(16).keys() ].map(() => Math.floor(Math.random() * 36).toString(36)).join(''),
-  Math.floor(Math.random() * 100000),
   options[Math.floor(Math.random() * options.length)],
   'Button',
   `https://www.google.com/search?q=${n + 1}`,
   'Custom Extension',
+  Math.floor(Math.random() * 100000),
 ]
 
 const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   headers: [
-    [ 'Primitives', 'Filters', 'Extensions' ],
-    [ 'Boolean', 'Number', 'String', 'Custom Filter', 'Select Extension', 'Button Extension', 'Link Extension', 'Custom Extension' ],
+    [ 'Primitives', 'Extensions', 'Filters' ],
+    [ 'Boolean', 'Number', 'String', 'Select Extension', 'Button Extension', 'Link Extension', 'Custom Extension', 'Custom Filter' ],
   ],
   headerSpans: [
-    [ { x: 3 }, null, { x: 4 } ],
+    [ { x: 3 }, { x: 4 }, null ],
   ],
   bodies: [ ...Array(64).keys() ].map(makeRowData),
-  filters: {
-    dollar (value) {
-      return `$ ${value.toLocaleString()}`
-    }
-  },
-  columnFilters: [
-    null, null, null, 'dollar', null, null, null, null, null
-  ],
   extensions: [
     {
       type: 'custom',
@@ -102,10 +94,29 @@ const editableTable = new EditableTable({
       },
     },
   ],
+  filters: {
+    dollar (value) {
+      return `$ ${value.toLocaleString()}`
+    }
+  },
+
   columnExtensions: [
-    null, null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
+    null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
       alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
-    } }, { type: 'link' }, { type: 'custom' }
+    } }, { type: 'link' }, { type: 'custom' }, null
+  ],
+
+  columnRegulations: [
+    { extension: null, filter: null },
+    { extension: null, filter: null },
+    { extension: null, filter: null },
+    { extension: { type: 'select', options }, filter: null },
+    { extension: { type: 'button', callback: (x, y) => {
+      alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
+    } }, filter: null },
+    { extension: { type: 'link' }, filter: null },
+    { extension: { type: 'custom' }, filter: null },
+    { extension: null, filter: 'dollar' },
   ],
   autofocus: true,
   bodyHeaderType: 'line', // 'none' | 'value' | etc (line number)

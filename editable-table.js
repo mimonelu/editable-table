@@ -12,12 +12,12 @@ class EditableTable {
   constructor (params) {
     this.params = params
     this.setupProperties()
+
     this.addExtensions(BuiltinExtensions)
     this.addExtensions(this.params.extensions)
-    this.setColumnFilters(this.params.columnFilters)
-    this.setCellFilters()
     this.setColumnExtensions(this.params.columnExtensions)
     this.setCellExtensions()
+
     this.setupTable()
     this.setupListeners()
     this.callExtension('all', 'onSetup')
@@ -25,11 +25,13 @@ class EditableTable {
 
   setupProperties () {
     this.focusType = !!this.params.autofocus ? 'Table' : 'None'
+
+    this.params.columnRegulations = this.params.columnRegulations || []
+
     this.extensions = []
-    this.columnFilters = []
-    this.cellFilters = []
     this.columnExtensions = []
     this.cellExtensions = []
+
     this.containerNode = null
     this.scrollerNode = null
     this.tableNode = null
@@ -66,31 +68,6 @@ class EditableTable {
 
   getHeight () {
     return this.params.bodies == null ? 0 : this.params.bodies.length
-  }
-
-  setColumnFilters (filters) {
-    this.columnFilters.splice(0)
-    if (filters != null) {
-      for (let i = 0; i < filters.length; i ++) {
-        this.columnFilters[i] = filters[i]
-      }
-    }
-    const xLength = this.getWidth()
-    for (let x = 0; x < xLength; x ++) {
-      this.columnFilters[x] = this.columnFilters[x] || null
-    }
-  }
-
-  setCellFilters () {
-    this.cellFilters.splice(0)
-    const xLength = this.getWidth()
-    const yLength = this.getHeight()
-    for (let y = 0; y < yLength; y ++) {
-      this.cellFilters[y] = []
-      for (let x = 0; x < xLength; x ++) {
-        this.cellFilters[y][x] = null
-      }
-    }
   }
 
   addExtensions (extensions) {
@@ -217,7 +194,6 @@ class EditableTable {
     this.params.bodies.push(data)
     const xLength = this.getWidth()
     this.cellExtensions.push(Array(xLength).fill(null))
-    this.cellFilters.push(Array(xLength).fill(null))
   }
 
   appendBodyRow (y) {
@@ -261,9 +237,9 @@ class EditableTable {
         if (type === 'boolean') {
           tdNode.setAttribute('data-checked', value.toString())
         } else if (value != null) {
-          const filterName = this.cellFilters[y][x] || this.columnFilters[x] || ''
-          const filterCallback = this.params.filters[filterName]
-          const pseudoValue = filterCallback != null ? filterCallback(value) : value
+          const regulation = this.params.columnRegulations[x] || {}
+          const filter = this.params.filters[regulation.filter]
+          const pseudoValue = filter != null ? filter(value) : value
           const textNode = document.createTextNode(pseudoValue)
           tdNode.appendChild(textNode)
         }

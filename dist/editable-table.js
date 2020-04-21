@@ -384,8 +384,6 @@ var EditableTable = /*#__PURE__*/function () {
     this.setupProperties();
     this.addExtensions(BuiltinExtensions);
     this.addExtensions(this.params.extensions);
-    this.setColumnFilters(this.params.columnFilters);
-    this.setCellFilters();
     this.setColumnExtensions(this.params.columnExtensions);
     this.setCellExtensions();
     this.setupTable();
@@ -397,9 +395,8 @@ var EditableTable = /*#__PURE__*/function () {
     key: "setupProperties",
     value: function setupProperties() {
       this.focusType = !!this.params.autofocus ? 'Table' : 'None';
+      this.params.columnRegulations = this.params.columnRegulations || [];
       this.extensions = [];
-      this.columnFilters = [];
-      this.cellFilters = [];
       this.columnExtensions = [];
       this.cellExtensions = [];
       this.containerNode = null;
@@ -448,38 +445,6 @@ var EditableTable = /*#__PURE__*/function () {
     key: "getHeight",
     value: function getHeight() {
       return this.params.bodies == null ? 0 : this.params.bodies.length;
-    }
-  }, {
-    key: "setColumnFilters",
-    value: function setColumnFilters(filters) {
-      this.columnFilters.splice(0);
-
-      if (filters != null) {
-        for (var i = 0; i < filters.length; i++) {
-          this.columnFilters[i] = filters[i];
-        }
-      }
-
-      var xLength = this.getWidth();
-
-      for (var x = 0; x < xLength; x++) {
-        this.columnFilters[x] = this.columnFilters[x] || null;
-      }
-    }
-  }, {
-    key: "setCellFilters",
-    value: function setCellFilters() {
-      this.cellFilters.splice(0);
-      var xLength = this.getWidth();
-      var yLength = this.getHeight();
-
-      for (var y = 0; y < yLength; y++) {
-        this.cellFilters[y] = [];
-
-        for (var x = 0; x < xLength; x++) {
-          this.cellFilters[y][x] = null;
-        }
-      }
     }
   }, {
     key: "addExtensions",
@@ -636,7 +601,6 @@ var EditableTable = /*#__PURE__*/function () {
       this.params.bodies.push(data);
       var xLength = this.getWidth();
       this.cellExtensions.push(Array(xLength).fill(null));
-      this.cellFilters.push(Array(xLength).fill(null));
     }
   }, {
     key: "appendBodyRow",
@@ -689,9 +653,9 @@ var EditableTable = /*#__PURE__*/function () {
           if (type === 'boolean') {
             tdNode.setAttribute('data-checked', value.toString());
           } else if (value != null) {
-            var filterName = this.cellFilters[y][x] || this.columnFilters[x] || '';
-            var filterCallback = this.params.filters[filterName];
-            var pseudoValue = filterCallback != null ? filterCallback(value) : value;
+            var regulation = this.params.columnRegulations[x] || {};
+            var filter = this.params.filters[regulation.filter];
+            var pseudoValue = filter != null ? filter(value) : value;
             var textNode = document.createTextNode(pseudoValue);
             tdNode.appendChild(textNode);
           }
