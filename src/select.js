@@ -29,7 +29,7 @@ export default {
 
   onKeyDown (instance, extension, keyCode) {
     if (instance.focusType === 'Listbox') {
-      const extension = instance.cellExtensions[instance.cursor.y][instance.cursor.x] || instance.columnExtensions[instance.cursor.x] || {}
+      const extension = instance.getExtension(instance.cursor.x)
       switch (keyCode) {
         case 'ArrowUp': {
           event.preventDefault()
@@ -132,7 +132,7 @@ export default {
   },
 
   updateListboxToCell (instance, x, y) {
-    const extension = instance.cellExtensions[y][x] || instance.columnExtensions[x] || {}
+    const extension = instance.getExtension(x)
     const value = extension.options[this.listboxSelectedIndex]
     instance.params.bodies[y][x] = value
     instance.updateCell(x, y)

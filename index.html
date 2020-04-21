@@ -62,7 +62,7 @@ const options = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July'
 
 const makeRowData = (n) => [
   Math.random() >= 0.5,
-  Math.random().toFixed(8),
+  Number(Math.random().toFixed(8)),
   [ ...Array(16).keys() ].map(() => Math.floor(Math.random() * 36).toString(36)).join(''),
   options[Math.floor(Math.random() * options.length)],
   'Button',
@@ -99,13 +99,6 @@ const editableTable = new EditableTable({
       return `$ ${value.toLocaleString()}`
     }
   },
-
-  columnExtensions: [
-    null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
-      alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
-    } }, { type: 'link' }, { type: 'custom' }, null
-  ],
-
   columnRegulations: [
     { extension: null, filter: null },
     { extension: null, filter: null },

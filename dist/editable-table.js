@@ -211,7 +211,7 @@ var _default = {
   },
   onKeyDown: function onKeyDown(instance, extension, keyCode) {
     if (instance.focusType === 'Listbox') {
-      var _extension = instance.cellExtensions[instance.cursor.y][instance.cursor.x] || instance.columnExtensions[instance.cursor.x] || {};
+      var _extension = instance.getExtension(instance.cursor.x);
 
       switch (keyCode) {
         case 'ArrowUp':
@@ -332,7 +332,7 @@ var _default = {
     instance.scrollIntoView(this.listboxNode, this.listboxNode.children[this.listboxSelectedIndex], 0, 0);
   },
   updateListboxToCell: function updateListboxToCell(instance, x, y) {
-    var extension = instance.cellExtensions[y][x] || instance.columnExtensions[x] || {};
+    var extension = instance.getExtension(x);
     var value = extension.options[this.listboxSelectedIndex];
     instance.params.bodies[y][x] = value;
     instance.updateCell(x, y);
@@ -374,18 +374,15 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var BuiltinExtensions = [_button.default, _link.default, _select.default];
-
 var EditableTable = /*#__PURE__*/function () {
   function EditableTable(params) {
     _classCallCheck(this, EditableTable);
 
     this.params = params;
     this.setupProperties();
-    this.addExtensions(BuiltinExtensions);
-    this.addExtensions(this.params.extensions);
-    this.setColumnExtensions(this.params.columnExtensions);
-    this.setCellExtensions();
+    this.params.extensions.push(_button.default);
+    this.params.extensions.push(_link.default);
+    this.params.extensions.push(_select.default);
     this.setupTable();
     this.setupListeners();
     this.callExtension('all', 'onSetup');
@@ -396,9 +393,7 @@ var EditableTable = /*#__PURE__*/function () {
     value: function setupProperties() {
       this.focusType = !!this.params.autofocus ? 'Table' : 'None';
       this.params.columnRegulations = this.params.columnRegulations || [];
-      this.extensions = [];
-      this.columnExtensions = [];
-      this.cellExtensions = [];
+      this.params.extensions = this.params.extensions || [];
       this.containerNode = null;
       this.scrollerNode = null;
       this.tableNode = null;
@@ -447,63 +442,16 @@ var EditableTable = /*#__PURE__*/function () {
       return this.params.bodies == null ? 0 : this.params.bodies.length;
     }
   }, {
-    key: "addExtensions",
-    value: function addExtensions(extensions) {
-      if (extensions != null) {
-        for (var i = 0; i < extensions.length; i++) {
-          this.addExtension(extensions[i]);
-        }
-      }
+    key: "getExtension",
+    value: function getExtension(x, y) {
+      return this.params.columnRegulations != null && this.params.columnRegulations[x] != null && this.params.columnRegulations[x].extension != null ? this.params.columnRegulations[x].extension : {
+        type: null
+      };
     }
   }, {
-    key: "addExtension",
-    value: function addExtension(extension) {
-      this.extensions.push(extension);
-    }
-  }, {
-    key: "setColumnExtensions",
-    value: function setColumnExtensions(extensions) {
-      this.columnExtensions.splice(0);
-
-      if (extensions != null) {
-        for (var i = 0; i < extensions.length; i++) {
-          this.columnExtensions[i] = extensions[i];
-        }
-      }
-
-      var xLength = this.getWidth();
-
-      for (var x = 0; x < xLength; x++) {
-        this.columnExtensions[x] = this.columnExtensions[x] || null;
-      }
-    }
-  }, {
-    key: "setCellExtensions",
-    value: function setCellExtensions() {
-      this.cellExtensions.splice(0);
-      var xLength = this.getWidth();
-      var yLength = this.getHeight();
-
-      for (var y = 0; y < yLength; y++) {
-        this.cellExtensions[y] = [];
-
-        for (var x = 0; x < xLength; x++) {
-          this.cellExtensions[y][x] = null;
-        }
-      }
-    }
-  }, {
-    key: "setCellExtension",
-    value: function setCellExtension(x, y, extension) {
-      if (extension != null) {
-        this.cellExtensions[y][x] = {};
-
-        for (var key in extension) {
-          this.cellExtensions[y][x][key] = extension[key];
-        }
-      } else {
-        this.cellExtensions[y][x] = null;
-      }
+    key: "getFilter",
+    value: function getFilter(x, y) {
+      return this.params.columnRegulations != null && this.params.columnRegulations[x] != null && this.params.columnRegulations[x].filter != null ? this.params.columnRegulations[x].filter : '';
     }
   }, {
     key: "setHeaders",
@@ -599,8 +547,6 @@ var EditableTable = /*#__PURE__*/function () {
     key: "appendBodyData",
     value: function appendBodyData(data) {
       this.params.bodies.push(data);
-      var xLength = this.getWidth();
-      this.cellExtensions.push(Array(xLength).fill(null));
     }
   }, {
     key: "appendBodyRow",
@@ -643,7 +589,7 @@ var EditableTable = /*#__PURE__*/function () {
       if (tdNode) {
         var value = this.params.bodies[y][x];
         var type = value == null ? 'number' : _typeof(value);
-        var extension = this.cellExtensions[y][x] || this.columnExtensions[x] || {};
+        var extension = this.getExtension(x);
         tdNode.setAttribute('data-type', type);
         tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y);
         tdNode.setAttribute('data-extension', extension.type || '');
@@ -653,8 +599,7 @@ var EditableTable = /*#__PURE__*/function () {
           if (type === 'boolean') {
             tdNode.setAttribute('data-checked', value.toString());
           } else if (value != null) {
-            var regulation = this.params.columnRegulations[x] || {};
-            var filter = this.params.filters[regulation.filter];
+            var filter = this.params.filters[this.getFilter(x)];
             var pseudoValue = filter != null ? filter(value) : value;
             var textNode = document.createTextNode(pseudoValue);
             tdNode.appendChild(textNode);
@@ -708,7 +653,7 @@ var EditableTable = /*#__PURE__*/function () {
       }
 
       var type = tdNode.getAttribute('data-type');
-      var extension = this.cellExtensions[y][x] || this.columnExtensions[x] || {};
+      var extension = this.getExtension(x);
 
       if (!this.callExtension(extension, 'onEdit', x, y, tdNode)) {
         if (type === 'boolean') {
@@ -1013,7 +958,7 @@ var EditableTable = /*#__PURE__*/function () {
         if (this.isCursorValid(this.cursor.x, this.cursor.y)) {
           var type = _typeof(this.params.bodies[this.cursor.y][this.cursor.x]);
 
-          var extension = this.cellExtensions[this.cursor.y][this.cursor.x] || this.columnExtensions[this.cursor.x] || {};
+          var extension = this.getExtension(this.cursor.x);
 
           switch (keyCode) {
             case 'ArrowLeft':
@@ -1213,11 +1158,11 @@ var EditableTable = /*#__PURE__*/function () {
         params[_key - 2] = arguments[_key];
       }
 
-      for (var i = 0; i < this.extensions.length; i++) {
-        if ((extension === 'all' || this.extensions[i].type === extension.type) && this.extensions[i][eventName] != null) {
-          var _this$extensions$i;
+      for (var i = 0; i < this.params.extensions.length; i++) {
+        if ((extension === 'all' || this.params.extensions[i].type === extension.type) && this.params.extensions[i][eventName] != null) {
+          var _this$params$extensio;
 
-          if (!(_this$extensions$i = this.extensions[i])[eventName].apply(_this$extensions$i, [this, extension].concat(params))) {
+          if (!(_this$params$extensio = this.params.extensions[i])[eventName].apply(_this$params$extensio, [this, extension].concat(params))) {
             return true;
           }
         }

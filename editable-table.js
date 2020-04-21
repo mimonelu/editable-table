@@ -2,22 +2,13 @@ import buttonExtension from './src/button.js'
 import linkExtension from './src/link.js'
 import selectExtension from './src/select.js'
 
-const BuiltinExtensions = [
-  buttonExtension,
-  linkExtension,
-  selectExtension,
-]
-
 class EditableTable {
   constructor (params) {
     this.params = params
     this.setupProperties()
-
-    this.addExtensions(BuiltinExtensions)
-    this.addExtensions(this.params.extensions)
-    this.setColumnExtensions(this.params.columnExtensions)
-    this.setCellExtensions()
-
+    this.params.extensions.push(buttonExtension)
+    this.params.extensions.push(linkExtension)
+    this.params.extensions.push(selectExtension)
     this.setupTable()
     this.setupListeners()
     this.callExtension('all', 'onSetup')
@@ -25,13 +16,8 @@ class EditableTable {
 
   setupProperties () {
     this.focusType = !!this.params.autofocus ? 'Table' : 'None'
-
     this.params.columnRegulations = this.params.columnRegulations || []
-
-    this.extensions = []
-    this.columnExtensions = []
-    this.cellExtensions = []
-
+    this.params.extensions = this.params.extensions || []
     this.containerNode = null
     this.scrollerNode = null
     this.tableNode = null
@@ -70,52 +56,12 @@ class EditableTable {
     return this.params.bodies == null ? 0 : this.params.bodies.length
   }
 
-  addExtensions (extensions) {
-    if (extensions != null) {
-      for (let i = 0; i < extensions.length; i ++) {
-        this.addExtension(extensions[i])
-      }
-    }
+  getExtension (x, y) {
+    return this.params.columnRegulations != null && this.params.columnRegulations[x] != null && this.params.columnRegulations[x].extension != null ? this.params.columnRegulations[x].extension : { type: null }
   }
 
-  addExtension (extension) {
-    this.extensions.push(extension)
-  }
-
-  setColumnExtensions (extensions) {
-    this.columnExtensions.splice(0)
-    if (extensions != null) {
-      for (let i = 0; i < extensions.length; i ++) {
-        this.columnExtensions[i] = extensions[i]
-      }
-    }
-    const xLength = this.getWidth()
-    for (let x = 0; x < xLength; x ++) {
-      this.columnExtensions[x] = this.columnExtensions[x] || null
-    }
-  }
-
-  setCellExtensions () {
-    this.cellExtensions.splice(0)
-    const xLength = this.getWidth()
-    const yLength = this.getHeight()
-    for (let y = 0; y < yLength; y ++) {
-      this.cellExtensions[y] = []
-      for (let x = 0; x < xLength; x ++) {
-        this.cellExtensions[y][x] = null
-      }
-    }
-  }
-
-  setCellExtension (x, y, extension) {
-    if (extension != null) {
-      this.cellExtensions[y][x] = {}
-      for (let key in extension) {
-        this.cellExtensions[y][x][key] = extension[key]
-      }
-    } else {
-      this.cellExtensions[y][x] = null
-    }
+  getFilter (x, y) {
+    return this.params.columnRegulations != null && this.params.columnRegulations[x] != null && this.params.columnRegulations[x].filter != null ? this.params.columnRegulations[x].filter : ''
   }
 
   setHeaders (headers) {
@@ -192,8 +138,6 @@ class EditableTable {
 
   appendBodyData (data) {
     this.params.bodies.push(data)
-    const xLength = this.getWidth()
-    this.cellExtensions.push(Array(xLength).fill(null))
   }
 
   appendBodyRow (y) {
@@ -228,7 +172,7 @@ class EditableTable {
     if (tdNode) {
       const value = this.params.bodies[y][x]
       const type = value == null ? 'number' : typeof value
-      const extension = this.cellExtensions[y][x] || this.columnExtensions[x] || {}
+      const extension = this.getExtension(x)
       tdNode.setAttribute('data-type', type)
       tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
       tdNode.setAttribute('data-extension', extension.type || '')
@@ -237,8 +181,7 @@ class EditableTable {
         if (type === 'boolean') {
           tdNode.setAttribute('data-checked', value.toString())
         } else if (value != null) {
-          const regulation = this.params.columnRegulations[x] || {}
-          const filter = this.params.filters[regulation.filter]
+          const filter = this.params.filters[this.getFilter(x)]
           const pseudoValue = filter != null ? filter(value) : value
           const textNode = document.createTextNode(pseudoValue)
           tdNode.appendChild(textNode)
@@ -282,8 +225,7 @@ class EditableTable {
       return
     }
     const type = tdNode.getAttribute('data-type')
-    const extension = this.cellExtensions[y][x] || this.columnExtensions[x] || {}
-
+    const extension = this.getExtension(x)
     if (!this.callExtension(extension, 'onEdit', x, y, tdNode)) {
       if (type === 'boolean') {
         this.params.bodies[y][x] = !this.params.bodies[y][x]
@@ -529,7 +471,7 @@ class EditableTable {
     if (this.focusType === 'Table') {
       if (this.isCursorValid(this.cursor.x, this.cursor.y)) {
         const type = typeof this.params.bodies[this.cursor.y][this.cursor.x]
-        const extension = this.cellExtensions[this.cursor.y][this.cursor.x] || this.columnExtensions[this.cursor.x] || {}
+        const extension = this.getExtension(this.cursor.x)
         switch (keyCode) {
           case 'ArrowLeft': {
             event.preventDefault()
@@ -586,7 +528,6 @@ class EditableTable {
           }
           case 'Backspace': {
             event.preventDefault()
-
             if (extension.type == null) {
               this.setCellValue(this.cursor.x, this.cursor.y, '')
             }
@@ -682,9 +623,9 @@ class EditableTable {
   }
 
   callExtension (extension, eventName, ...params) {
-    for (let i = 0; i < this.extensions.length; i ++) {
-      if ((extension === 'all' || this.extensions[i].type === extension.type) && this.extensions[i][eventName] != null) {
-        if (!this.extensions[i][eventName](this, extension, ...params)) {
+    for (let i = 0; i < this.params.extensions.length; i ++) {
+      if ((extension === 'all' || this.params.extensions[i].type === extension.type) && this.params.extensions[i][eventName] != null) {
+        if (!this.params.extensions[i][eventName](this, extension, ...params)) {
           return true
         }
       }
