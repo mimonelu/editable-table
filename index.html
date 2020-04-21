@@ -68,14 +68,14 @@ const makeRowData = (n) => [
   options[Math.floor(Math.random() * options.length)],
   'Button',
   `https://www.google.com/search?q=${n + 1}`,
-  'Custom Regulation',
+  'Custom Extension',
 ]
 
 const editableTable = new EditableTable({
   containerNode: document.querySelector('.container'),
   headers: [
-    [ 'Primitives', 'Filters', 'Regulations' ],
-    [ 'Boolean', 'Number', 'String', 'Custom Filter', 'Select Regulation', 'Button Regulation', 'Link Regulation', 'Custom Regulation' ],
+    [ 'Primitives', 'Filters', 'Extensions' ],
+    [ 'Boolean', 'Number', 'String', 'Custom Filter', 'Select Extension', 'Button Extension', 'Link Extension', 'Custom Extension' ],
   ],
   headerSpans: [
     [ { x: 3 }, null, { x: 4 } ],
@@ -89,20 +89,20 @@ const editableTable = new EditableTable({
   columnFilters: [
     null, null, null, 'dollar', null, null, null, null, null
   ],
-  regulations: [
+  extensions: [
     {
       type: 'custom',
-      onEdit (instance, regulation, x, y, tdNode) {
+      onEdit (instance, extension, x, y, tdNode) {
         return false
       },
-      onUpdateCell (instance, regulation, x, y, tdNode) {
+      onUpdateCell (instance, extension, x, y, tdNode) {
         const textNode = document.createTextNode(`${x} + ${y} = ${x + y}`)
         tdNode.appendChild(textNode)
         return false
       },
     },
   ],
-  columnRegulations: [
+  columnExtensions: [
     null, null, null, null, { type: 'select', options }, { type: 'button', callback: (x, y) => {
       alert(`[ ${x + 1}, ${y + 1} ] clicked!`)
     } }, { type: 'link' }, { type: 'custom' }

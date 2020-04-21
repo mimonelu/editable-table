@@ -172,9 +172,9 @@ $editable-table-accent-color: #0080f0 !default;
     word-break: keep-all;
   }
 
-  // ======== Button Regulation ========
+  // ======== Button Extension ========
 
-  tr td[data-regulation="button"] {
+  tr td[data-extension="button"] {
     cursor: pointer;
     padding: 0.25rem;
 
@@ -192,9 +192,9 @@ $editable-table-accent-color: #0080f0 !default;
     }
   }
 
-  // ======== Link Regulation ========
+  // ======== Link Extension ========
 
-  tr td[data-regulation="link"] {
+  tr td[data-extension="link"] {
     cursor: pointer;
 
     a {
@@ -208,9 +208,9 @@ $editable-table-accent-color: #0080f0 !default;
     }
   }
 
-  // ======== Select Regulation ========
+  // ======== Select Extension ========
 
-  tr td[data-regulation="select"] {
+  tr td[data-extension="select"] {
     padding-right: 1.5rem;
 
     &::after {

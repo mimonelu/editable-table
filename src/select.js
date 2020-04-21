@@ -7,38 +7,38 @@ export default {
     this.setupLlistbox(instance)
   },
 
-  onClick (instance, regulation, targetNode) {
+  onClick (instance, extension, targetNode) {
     if (!targetNode.closest('.editable-table__listbox')) {
       this.closeListbox(instance)
     }
   },
 
-  onEdit (instance, regulation, x, y, tdNode) {
+  onEdit (instance, extension, x, y, tdNode) {
     this.listboxSelectedIndex = 0
-    for (let i = 0; i < regulation.options.length; i ++) {
-      if (regulation.options[i] === instance.params.bodies[y][x]) {
+    for (let i = 0; i < extension.options.length; i ++) {
+      if (extension.options[i] === instance.params.bodies[y][x]) {
         this.listboxSelectedIndex = i
         break
       }
     }
-    if (regulation.options.length > 0) {
-      this.openListbox(instance, tdNode, regulation.options)
+    if (extension.options.length > 0) {
+      this.openListbox(instance, tdNode, extension.options)
     }
     return false
   },
 
-  onKeyDown (instance, regulation, keyCode) {
+  onKeyDown (instance, extension, keyCode) {
     if (instance.focusType === 'Listbox') {
-      const regulation = instance.cellRegulations[instance.cursor.y][instance.cursor.x] || instance.columnRegulations[instance.cursor.x] || {}
+      const extension = instance.cellExtensions[instance.cursor.y][instance.cursor.x] || instance.columnExtensions[instance.cursor.x] || {}
       switch (keyCode) {
         case 'ArrowUp': {
           event.preventDefault()
-          this.addListboxSelectedIndex(instance, - 1, regulation.options)
+          this.addListboxSelectedIndex(instance, - 1, extension.options)
           break
         }
         case 'ArrowDown': {
           event.preventDefault()
-          this.addListboxSelectedIndex(instance, 1, regulation.options)
+          this.addListboxSelectedIndex(instance, 1, extension.options)
           break
         }
         case 'Tab': {
@@ -66,7 +66,7 @@ export default {
     }
   },
 
-  onKeyUp (instance, regulation, keyCode) {
+  onKeyUp (instance, extension, keyCode) {
     if (instance.focusType === 'Listbox') {
       switch (keyCode) {
         case 'Enter': {
@@ -79,8 +79,8 @@ export default {
     }
   },
 
-  onPasteCell (instance, regulation, x, y) {
-    return regulation.options.indexOf(instance.clipboard.value) !== - 1
+  onPasteCell (instance, extension, x, y) {
+    return extension.options.indexOf(instance.clipboard.value) !== - 1
   },
 
   setupLlistbox (instance) {
@@ -132,8 +132,8 @@ export default {
   },
 
   updateListboxToCell (instance, x, y) {
-    const regulation = instance.cellRegulations[y][x] || instance.columnRegulations[x] || {}
-    const value = regulation.options[this.listboxSelectedIndex]
+    const extension = instance.cellExtensions[y][x] || instance.columnExtensions[x] || {}
+    const value = extension.options[this.listboxSelectedIndex]
     instance.params.bodies[y][x] = value
     instance.updateCell(x, y)
   },

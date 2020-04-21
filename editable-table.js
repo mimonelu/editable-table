@@ -1,35 +1,35 @@
-import buttonRegulation from './src/button-regulation.js'
-import linkRegulation from './src/link-regulation.js'
-import selectRegulation from './src/select-regulation.js'
+import buttonExtension from './src/button.js'
+import linkExtension from './src/link.js'
+import selectExtension from './src/select.js'
 
-const BuiltinRegulations = [
-  buttonRegulation,
-  linkRegulation,
-  selectRegulation,
+const BuiltinExtensions = [
+  buttonExtension,
+  linkExtension,
+  selectExtension,
 ]
 
 class EditableTable {
   constructor (params) {
     this.params = params
     this.setupProperties()
-    this.addRegulations(BuiltinRegulations)
-    this.addRegulations(this.params.regulations)
+    this.addExtensions(BuiltinExtensions)
+    this.addExtensions(this.params.extensions)
     this.setColumnFilters(this.params.columnFilters)
     this.setCellFilters()
-    this.setColumnRegulations(this.params.columnRegulations)
-    this.setCellRegulations()
+    this.setColumnExtensions(this.params.columnExtensions)
+    this.setCellExtensions()
     this.setupTable()
     this.setupListeners()
-    this.callRegulation('all', 'onSetup')
+    this.callExtension('all', 'onSetup')
   }
 
   setupProperties () {
     this.focusType = !!this.params.autofocus ? 'Table' : 'None'
-    this.regulations = []
+    this.extensions = []
     this.columnFilters = []
     this.cellFilters = []
-    this.columnRegulations = []
-    this.cellRegulations = []
+    this.columnExtensions = []
+    this.cellExtensions = []
     this.containerNode = null
     this.scrollerNode = null
     this.tableNode = null
@@ -37,7 +37,7 @@ class EditableTable {
     this.tbodyNode = null
     this.cursor = { x: 0, y: 0 }
     this.isInputting = false
-    this.clipboard = { type: null, regulation: null, value: null }
+    this.clipboard = { type: null, extension: null, value: null }
   }
 
   setupTable () {
@@ -93,51 +93,51 @@ class EditableTable {
     }
   }
 
-  addRegulations (regulations) {
-    if (regulations != null) {
-      for (let i = 0; i < regulations.length; i ++) {
-        this.addRegulation(regulations[i])
+  addExtensions (extensions) {
+    if (extensions != null) {
+      for (let i = 0; i < extensions.length; i ++) {
+        this.addExtension(extensions[i])
       }
     }
   }
 
-  addRegulation (regulation) {
-    this.regulations.push(regulation)
+  addExtension (extension) {
+    this.extensions.push(extension)
   }
 
-  setColumnRegulations (regulations) {
-    this.columnRegulations.splice(0)
-    if (regulations != null) {
-      for (let i = 0; i < regulations.length; i ++) {
-        this.columnRegulations[i] = regulations[i]
+  setColumnExtensions (extensions) {
+    this.columnExtensions.splice(0)
+    if (extensions != null) {
+      for (let i = 0; i < extensions.length; i ++) {
+        this.columnExtensions[i] = extensions[i]
       }
     }
     const xLength = this.getWidth()
     for (let x = 0; x < xLength; x ++) {
-      this.columnRegulations[x] = this.columnRegulations[x] || null
+      this.columnExtensions[x] = this.columnExtensions[x] || null
     }
   }
 
-  setCellRegulations () {
-    this.cellRegulations.splice(0)
+  setCellExtensions () {
+    this.cellExtensions.splice(0)
     const xLength = this.getWidth()
     const yLength = this.getHeight()
     for (let y = 0; y < yLength; y ++) {
-      this.cellRegulations[y] = []
+      this.cellExtensions[y] = []
       for (let x = 0; x < xLength; x ++) {
-        this.cellRegulations[y][x] = null
+        this.cellExtensions[y][x] = null
       }
     }
   }
 
-  setCellRegulation (x, y, regulation) {
-    if (regulation != null) {
-      this.cellRegulations[y][x] = {}
-      for (let key in regulation) {
-        this.cellRegulations[y][x][key] = regulation[key]
+  setCellExtension (x, y, extension) {
+    if (extension != null) {
+      this.cellExtensions[y][x] = {}
+      for (let key in extension) {
+        this.cellExtensions[y][x][key] = extension[key]
       }
     } else {
-      this.cellRegulations[y][x] = null
+      this.cellExtensions[y][x] = null
     }
   }
 
@@ -216,7 +216,7 @@ class EditableTable {
   appendBodyData (data) {
     this.params.bodies.push(data)
     const xLength = this.getWidth()
-    this.cellRegulations.push(Array(xLength).fill(null))
+    this.cellExtensions.push(Array(xLength).fill(null))
     this.cellFilters.push(Array(xLength).fill(null))
   }
 
@@ -252,12 +252,12 @@ class EditableTable {
     if (tdNode) {
       const value = this.params.bodies[y][x]
       const type = value == null ? 'number' : typeof value
-      const regulation = this.cellRegulations[y][x] || this.columnRegulations[x] || {}
+      const extension = this.cellExtensions[y][x] || this.columnExtensions[x] || {}
       tdNode.setAttribute('data-type', type)
       tdNode.setAttribute('data-cursor', x === this.cursor.x && y === this.cursor.y)
-      tdNode.setAttribute('data-regulation', regulation.type || '')
+      tdNode.setAttribute('data-extension', extension.type || '')
       tdNode.innerHTML = ''
-      if (!this.callRegulation(regulation, 'onUpdateCell', x, y, tdNode)) {
+      if (!this.callExtension(extension, 'onUpdateCell', x, y, tdNode)) {
         if (type === 'boolean') {
           tdNode.setAttribute('data-checked', value.toString())
         } else if (value != null) {
@@ -306,9 +306,9 @@ class EditableTable {
       return
     }
     const type = tdNode.getAttribute('data-type')
-    const regulation = this.cellRegulations[y][x] || this.columnRegulations[x] || {}
+    const extension = this.cellExtensions[y][x] || this.columnExtensions[x] || {}
 
-    if (!this.callRegulation(regulation, 'onEdit', x, y, tdNode)) {
+    if (!this.callExtension(extension, 'onEdit', x, y, tdNode)) {
       if (type === 'boolean') {
         this.params.bodies[y][x] = !this.params.bodies[y][x]
         this.updateCell(x, y)
@@ -426,7 +426,7 @@ class EditableTable {
           inputNode.setSelectionRange(length, length)
         }
         inputNode.focus()
-        this.callRegulation(regulation, 'onEditPrepared', x, y, tdNode, inputNode)
+        this.callExtension(extension, 'onEditPrepared', x, y, tdNode, inputNode)
       }
     }
   }
@@ -529,7 +529,7 @@ class EditableTable {
   }
 
   onClick (event) {
-    this.callRegulation('all', 'onClick', event.target)
+    this.callExtension('all', 'onClick', event.target)
     if (event.target.closest('.editable-table')) {
       this.setFocus('Table')
       if (event.target.closest('td')) {
@@ -553,7 +553,7 @@ class EditableTable {
     if (this.focusType === 'Table') {
       if (this.isCursorValid(this.cursor.x, this.cursor.y)) {
         const type = typeof this.params.bodies[this.cursor.y][this.cursor.x]
-        const regulation = this.cellRegulations[this.cursor.y][this.cursor.x] || this.columnRegulations[this.cursor.x] || {}
+        const extension = this.cellExtensions[this.cursor.y][this.cursor.x] || this.columnExtensions[this.cursor.x] || {}
         switch (keyCode) {
           case 'ArrowLeft': {
             event.preventDefault()
@@ -611,7 +611,7 @@ class EditableTable {
           case 'Backspace': {
             event.preventDefault()
 
-            if (regulation.type == null) {
+            if (extension.type == null) {
               this.setCellValue(this.cursor.x, this.cursor.y, '')
             }
             break
@@ -624,23 +624,23 @@ class EditableTable {
           case 'KeyC': {
             if (event.ctrlKey || event.metaKey) {
               event.preventDefault()
-              this.copyCell(this.cursor.x, this.cursor.y, type, regulation)
+              this.copyCell(this.cursor.x, this.cursor.y, type, extension)
             } else {
-              this.onEtceteraKeyDown(type, regulation, event)
+              this.onEtceteraKeyDown(type, extension, event)
             }
             break
           }
           case 'KeyV': {
             if (event.ctrlKey || event.metaKey) {
               event.preventDefault()
-              this.pasteCell(this.cursor.x, this.cursor.y, type, regulation)
+              this.pasteCell(this.cursor.x, this.cursor.y, type, extension)
             } else {
-              this.onEtceteraKeyDown(type, regulation, event)
+              this.onEtceteraKeyDown(type, extension, event)
             }
             break
           }
           default: {
-            this.onEtceteraKeyDown(type, regulation, event)
+            this.onEtceteraKeyDown(type, extension, event)
             break
           }
         }
@@ -654,12 +654,12 @@ class EditableTable {
         }
       }
     } else {
-      this.callRegulation('all', 'onKeyDown', keyCode)
+      this.callExtension('all', 'onKeyDown', keyCode)
     }
   }
 
-  onEtceteraKeyDown (type, regulation, event) {
-    if (type !== 'boolean' && regulation.type == null) {
+  onEtceteraKeyDown (type, extension, event) {
+    if (type !== 'boolean' && extension.type == null) {
       if (event.key.length === 1) {
         const charCode = event.key.charCodeAt(0)
         if (charCode >= 32 && charCode <= 126) {
@@ -680,21 +680,21 @@ class EditableTable {
         }
       }
     } else {
-      this.callRegulation('all', 'onKeyUp', keyCode)
+      this.callExtension('all', 'onKeyUp', keyCode)
     }
   }
 
-  copyCell (x, y, type, regulation) {
-    if (!this.callRegulation(regulation, 'onCopyCell', x, y)) {
+  copyCell (x, y, type, extension) {
+    if (!this.callExtension(extension, 'onCopyCell', x, y)) {
       this.clipboard.type = type
-      this.clipboard.regulation = regulation
+      this.clipboard.extension = extension
       this.clipboard.value = this.params.bodies[y][x]
     }
   }
 
-  pasteCell (x, y, type, regulation) {
-    if (this.clipboard.type === type && this.clipboard.regulation.type === regulation.type) {
-      if (!this.callRegulation(regulation, 'onPasteCell', x, y)) {
+  pasteCell (x, y, type, extension) {
+    if (this.clipboard.type === type && this.clipboard.extension.type === extension.type) {
+      if (!this.callExtension(extension, 'onPasteCell', x, y)) {
         this.params.bodies[y][x] = this.clipboard.value
         this.updateCell(x, y)
       }
@@ -705,10 +705,10 @@ class EditableTable {
     this.updateHeaderPositions()
   }
 
-  callRegulation (regulation, eventName, ...params) {
-    for (let i = 0; i < this.regulations.length; i ++) {
-      if ((regulation === 'all' || this.regulations[i].type === regulation.type) && this.regulations[i][eventName] != null) {
-        if (!this.regulations[i][eventName](this, regulation, ...params)) {
+  callExtension (extension, eventName, ...params) {
+    for (let i = 0; i < this.extensions.length; i ++) {
+      if ((extension === 'all' || this.extensions[i].type === extension.type) && this.extensions[i][eventName] != null) {
+        if (!this.extensions[i][eventName](this, extension, ...params)) {
           return true
         }
       }
