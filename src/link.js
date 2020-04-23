@@ -5,6 +5,10 @@ export default {
     return false
   },
 
+  onEtceteraKeyDown () {
+    return false
+  },
+
   onEdit (instance, extension, x, y, tdNode) {
     tdNode.firstChild.click()
     return false

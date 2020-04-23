@@ -586,7 +586,7 @@ class EditableTable {
 
   onEtceteraKeyDown (type, extension, event) {
     if (type !== 'boolean') {
-      if (extension.type == null || this.callExtension(extension, 'onEtceteraKeyDown', event.key)) {
+      if (extension.type == null || !this.callExtension(extension, 'onEtceteraKeyDown', event.key)) {
         if (event.key.length === 1) {
           const charCode = event.key.charCodeAt(0)
           if (charCode >= 32 && charCode <= 126) {

@@ -5,6 +5,10 @@ export default {
     return false
   },
 
+  onEtceteraKeyDown () {
+    return false
+  },
+
   onEdit (instance, extension, x, y, tdNode) {
     if (extension.callback != null) {
       extension.callback(x, y)

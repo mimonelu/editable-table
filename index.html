@@ -98,6 +98,7 @@ const editableTable = new EditableTable({
   extensions: [
     {
       type: 'custom',
+      /*
       onClick () {
         return false
       },
@@ -125,6 +126,7 @@ const editableTable = new EditableTable({
       onPasteCell () {
         return false
       },
+      */
       onUpdateCell (instance, extension, x, y, tdNode) {
         const textNode = document.createTextNode(`${x} + ${y} = ${x + y}`)
         tdNode.appendChild(textNode)
