@@ -58,13 +58,26 @@ small {
     <script src="./dist/editable-table.js"></script>
     <script>
 
-const options = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ]
+const options = [
+  { label: 'January', value: '1' },
+  { label: 'February', value: '2' },
+  { label: 'March', value: '3' },
+  { label: 'April', value: '4' },
+  { label: 'May', value: '5' },
+  { label: 'June', value: '6' },
+  { label: 'July', value: '7' },
+  { label: 'August', value: '8' },
+  { label: 'September', value: '9' },
+  { label: 'October', value: '10' },
+  { label: 'November', value: '11' },
+  { label: 'December', value: '12' },
+]
 
 const makeRowData = (n) => [
   Math.random() >= 0.5,
   Number(Math.random().toFixed(8)),
   [ ...Array(16).keys() ].map(() => Math.floor(Math.random() * 36).toString(36)).join(''),
-  options[Math.floor(Math.random() * options.length)],
+  options[Math.floor(Math.random() * options.length)].value,
   'Button',
   `https://www.google.com/search?q=${n + 1}`,
   'Custom Extension',

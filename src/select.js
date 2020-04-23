@@ -16,7 +16,7 @@ export default {
   onEdit (instance, extension, x, y, tdNode) {
     this.listboxSelectedIndex = 0
     for (let i = 0; i < extension.options.length; i ++) {
-      if (extension.options[i] === instance.params.bodies[y][x]) {
+      if (extension.options[i].value === instance.params.bodies[y][x]) {
         this.listboxSelectedIndex = i
         break
       }
@@ -24,6 +24,21 @@ export default {
     if (extension.options.length > 0) {
       this.openListbox(instance, tdNode, extension.options)
     }
+    return false
+  },
+
+  onUpdateCell (instance, extension, x, y, tdNode) {
+    const options = extension.options
+    const value = instance.params.bodies[y][x]
+    let text = ''
+    for (let i = 0; i < options.length; i ++) {
+      if (value === options[i].value) {
+        text = options[i].label
+        break
+      }
+    }
+    const textNode = document.createTextNode(text)
+    tdNode.appendChild(textNode)
     return false
   },
 
@@ -102,7 +117,7 @@ export default {
     this.listboxNode.innerHTML = ''
     for (let i = 0; i < options.length; i ++) {
       const itemNode = document.createElement('li')
-      const textNode = document.createTextNode(options[i])
+      const textNode = document.createTextNode(options[i].label)
       if (i === this.listboxSelectedIndex) {
         selectedItemNode = itemNode
       }
@@ -133,7 +148,7 @@ export default {
 
   updateListboxToCell (instance, x, y) {
     const extension = instance.getExtension(x)
-    const value = extension.options[this.listboxSelectedIndex]
+    const value = extension.options[this.listboxSelectedIndex].value
     instance.params.bodies[y][x] = value
     instance.updateCell(x, y)
   },

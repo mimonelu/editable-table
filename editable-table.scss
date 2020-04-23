@@ -211,7 +211,7 @@ $editable-table-accent-color: #0080f0 !default;
   // ======== Select Extension ========
 
   tr td[data-extension="select"] {
-    padding-right: 1.5rem;
+    padding-right: 2rem;
 
     &::after {
       background-color: $editable-table-fg-color;
