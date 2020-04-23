@@ -7,6 +7,10 @@ export default {
     this.setupLlistbox(instance)
   },
 
+  onBackspaceKeyDown () {
+    return false
+  },
+
   onClick (instance, extension, targetNode) {
     if (!targetNode.closest('.editable-table__listbox')) {
       this.closeListbox(instance)

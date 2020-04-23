@@ -1,6 +1,10 @@
 export default {
   type: 'link',
 
+  onBackspaceKeyDown () {
+    return false
+  },
+
   onEdit (instance, extension, x, y, tdNode) {
     tdNode.firstChild.click()
     return false

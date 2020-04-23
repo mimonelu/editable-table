@@ -98,7 +98,31 @@ const editableTable = new EditableTable({
   extensions: [
     {
       type: 'custom',
-      onEdit (instance, extension, x, y, tdNode) {
+      onClick () {
+        return false
+      },
+      onEditPrepared () {
+        return false
+      },
+      onEdit () {
+        return false
+      },
+      onKeyDown () {
+        return false
+      },
+      onEtceteraKeyDown () {
+        return false
+      },
+      onBackspaceKeyDown () {
+        return false
+      },
+      onKeyUp () {
+        return false
+      },
+      onCopyCell () {
+        return false
+      },
+      onPasteCell () {
         return false
       },
       onUpdateCell (instance, extension, x, y, tdNode) {

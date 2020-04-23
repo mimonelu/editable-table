@@ -537,7 +537,7 @@ class EditableTable {
           }
           case 'Backspace': {
             event.preventDefault()
-            if (extension.type == null) {
+            if (!this.isDisabled(this.cursor.x) && (extension.type == null || !this.callExtension(extension, 'onBackspaceKeyDown'))) {
               this.setCellValue(this.cursor.x, this.cursor.y, '')
             }
             break
@@ -585,12 +585,14 @@ class EditableTable {
   }
 
   onEtceteraKeyDown (type, extension, event) {
-    if (type !== 'boolean' && extension.type == null) {
-      if (event.key.length === 1) {
-        const charCode = event.key.charCodeAt(0)
-        if (charCode >= 32 && charCode <= 126) {
-          this.edit(this.cursor.x, this.cursor.y, true)
-          return
+    if (type !== 'boolean') {
+      if (extension.type == null || this.callExtension(extension, 'onEtceteraKeyDown', event.key)) {
+        if (event.key.length === 1) {
+          const charCode = event.key.charCodeAt(0)
+          if (charCode >= 32 && charCode <= 126) {
+            this.edit(this.cursor.x, this.cursor.y, true)
+            return
+          }
         }
       }
     }
@@ -634,14 +636,15 @@ class EditableTable {
   }
 
   callExtension (extension, eventName, ...params) {
+    let result = false
     for (let i = 0; i < this.params.extensions.length; i ++) {
       if ((extension === 'all' || this.params.extensions[i].type === extension.type) && this.params.extensions[i][eventName] != null) {
-        if (!this.params.extensions[i][eventName](this, extension, ...params)) {
-          return true
+        if (this.params.extensions[i][eventName](this, extension, ...params) === false) {
+          result = true
         }
       }
     }
-    return false
+    return result
   }
 }
 
